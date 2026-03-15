@@ -1,16 +1,3 @@
-// {
-//   "extends": "expo/tsconfig.base",
-//   "compilerOptions": {
-//     "strict": true,
-//     "allowJs": true,
-//     "noEmit": true,
-//     "baseUrl": ".",
-//     "paths": {
-//       "@/*": ["./src/*"]
-//     }
-//   }
-// }
-
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
@@ -19,9 +6,17 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "module": "ESNext",
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }

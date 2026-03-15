@@ -42,6 +42,7 @@ app-example
 /ios
 /android
 node_modules/
+.claude/
 .expo/
 dist/
 .env
