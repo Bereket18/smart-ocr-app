@@ -472,7 +472,7 @@ The project is organized into 5 layers. Each layer has exactly one job. A layer 
 ├─────────────────────────────────────────┤
 │  SERVICE LAYER                          │
 │  src/services/                          │
-│  Talks to external APIs.               │
+│  Talks to external APIs.                │
 ├─────────────────────────────────────────┤
 │  STATE LAYER                            │
 │  src/store/                             │

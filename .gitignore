@@ -45,5 +45,10 @@ node_modules/
 .claude/
 .expo/
 dist/
+.alpackages/
+.snapshots/
+.vscode/
 .env
+.settings.json
 *.log
+

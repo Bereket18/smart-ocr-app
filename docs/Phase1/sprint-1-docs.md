@@ -172,7 +172,9 @@ With one central types file, you change it in one place. TypeScript immediately 
 The main object. One Scan = one document the user scanned. Every field has a purpose:
 
 | Field | What It Holds | When It Gets a Value |
+
 |---|---|---|
+
 | `id` | Unique identifier | When scan is created — `Date.now().toString()` |
 | `imageUri` | Local file path on the device | After taking a photo |
 | `imageUrl` | Firebase download URL | Phase 2 — after upload |
@@ -247,6 +249,7 @@ Components import `Theme` rather than `Colors.dark` directly. When Phase 4 adds 
 ### The Color Tokens
 
 | Token | Color | Used For |
+
 |---|---|---|
 | `background` | Very dark navy | The app background behind everything |
 | `surface` | Slightly lighter navy | Cards, inputs, bottom sheets |
@@ -334,6 +337,7 @@ Imagine a whiteboard in the hallway between all your rooms (screens). Every room
 `create` is the Zustand function that builds the store. The `<ScanStore>` tells TypeScript what shape the store must have — it checks against the `ScanStore` interface from `types/index.ts`.
 
 `(set, get) =>` — Zustand gives you two tools:
+
 - `set` — updates state
 - `get` — reads current state from inside an action
 
