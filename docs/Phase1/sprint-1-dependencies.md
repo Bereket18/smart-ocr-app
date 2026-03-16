@@ -20,17 +20,20 @@ When you ran `npm install zustand` — you downloaded Zustand's code into your `
 React Native lets you write JavaScript/TypeScript and it turns into a real iOS and Android app. Expo is a layer on top of React Native that removes all the complicated setup.
 
 **Without Expo you would need:**
+
 - Xcode installed on a Mac
 - Android Studio
 - Complex build configuration files
 - Native code knowledge (Swift, Kotlin)
 
 **With Expo you just need:**
+
 - Node.js
 - The Expo Go app on your iPhone
 - Run `npx expo start` — done
 
 **Simple example:**
+
 ```js
 // This TypeScript/JavaScript code...
 import { View, Text } from 'react-native'
@@ -91,6 +94,7 @@ function HistoryScreen() {
 **Why Zustand and not Redux?**
 
 Redux is the most famous state management tool. But it requires:
+
 - Actions
 - Reducers
 - Dispatchers
@@ -98,6 +102,7 @@ Redux is the most famous state management tool. But it requires:
 - 50+ lines of setup for simple things
 
 Zustand requires:
+
 - One `create()` call
 - Done
 
@@ -123,6 +128,7 @@ app/(tabs)/history.tsx  →  /history
 No setup. No registration. Just create the file and the route exists.
 
 **Simple example:**
+
 ```ts
 // To navigate to the camera screen from anywhere:
 import { router } from 'expo-router'
@@ -150,7 +156,9 @@ Google's on-device AI that reads text from images. This is the core OCR engine.
 The AI model runs entirely on the phone. No internet required. No API key. No cost per scan. The model is bundled into your app when you build it.
 
 **Simple example:**
+
 ```ts
+
 import TextRecognition from '@react-native-ml-kit/text-recognition'
 
 // Give it an image path — get back the text
@@ -162,6 +170,7 @@ console.log(result.blocks[0].text)  // "Hello World"
 **Why ML Kit and not a cloud OCR API?**
 
 | ML Kit (on-device) | Cloud OCR (e.g. Google Vision API) |
+
 |---|---|
 | Free forever | Pay per scan |
 | Works offline | Requires internet |
@@ -177,6 +186,7 @@ ML Kit wins on every dimension for this use case.
 Three separate Firebase services that work together:
 
 **Firebase Auth — who is the user?**
+
 ```ts
 // Creates an anonymous account — no email, no password
 // Just gives each device installation a unique ID
@@ -185,8 +195,8 @@ const userId = auth.currentUser.uid  // "abc123xyz"
 ```
 
 Anonymous auth means users can use the app immediately without signing up. Every installation gets a unique ID used to separate their data.
-
 **Firebase Firestore — where the scan data lives**
+
 ```ts
 // Save a scan document
 await addDoc(collection(db, 'users', userId, 'scans'), {
@@ -200,8 +210,8 @@ const snapshot = await getDocs(collection(db, 'users', userId, 'scans'))
 ```
 
 Firestore is a database in the cloud. Data is organized in collections and documents — like folders and files.
-
 **Firebase Storage — where the images live**
+
 ```ts
 // Upload an image file
 const storageRef = ref(storage, `users/${userId}/scans/${Date.now()}.jpg`)
@@ -511,6 +521,7 @@ app/
 ```
 
 | File | What It Does |
+
 |---|---|
 | `_layout.tsx` | The root wrapper. Sets up the navigation stack. Dark header. Wraps every screen. |
 | `(tabs)/_layout.tsx` | Configures the bottom tab bar. Three tabs, icons, colors. |
@@ -543,6 +554,7 @@ src/components/
 ```
 
 | File | What It Does |
+
 |---|---|
 | `PrimaryButton.tsx` | The big cyan button. Used for Scan Now and Save. Has a loading spinner state. |
 | `OutlineButton.tsx` | A bordered button with transparent background. Used for Gallery and Multi-page. |
@@ -574,6 +586,7 @@ src/hooks/
 ```
 
 | File | What It Does |
+
 |---|---|
 | `useImagePicker.ts` | Handles camera permission, opens camera, opens gallery, compresses the image. |
 | `useOCR.ts` | Manages the OCR state machine. Calls `ocr.service.ts`. Returns status, text, language, error. |
@@ -613,6 +626,7 @@ src/services/
 ```
 
 | File | What It Does |
+
 |---|---|
 | `ocr.service.ts` | Wraps ML Kit. Takes an image URI. Returns extracted text and language. |
 | `summarize.service.ts` | Wraps Claude API. Takes extracted text. Returns a summary string. |
@@ -679,6 +693,7 @@ src/utils/
 ```
 
 | File | What It Does |
+
 |---|---|
 | `formatters.ts` | `formatDate()`, `countWords()`, `truncate()`, `generateId()` |
 | `imageUtils.ts` | `compressImage()`, `getImageDimensions()` |
@@ -690,6 +705,7 @@ Pure functions with no side effects. No React. No APIs. Input goes in. Output co
 #### Root Files
 
 | File | What It Does |
+
 |---|---|
 | `.env` | API keys. Never committed. Never opened in public. |
 | `.gitignore` | Tells Git which files to ignore. .env is in here. |
@@ -749,6 +765,7 @@ History screen (app/(tabs)/history.tsx)
 ## Summary Table — Which File Does What
 
 | I need to... | Go to this file |
+
 |---|---|
 | Add a new screen | Create a file in `app/` |
 | Change a button style | `src/components/PrimaryButton.tsx` |
