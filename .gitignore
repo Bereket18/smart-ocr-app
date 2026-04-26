@@ -50,5 +50,8 @@ dist/
 .vscode/
 .env
 .settings.json
+.package-lock.json
+.eas.json
 *.log
+.app.json
 

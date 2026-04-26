@@ -1,52 +1,57 @@
-import { useState, useRef } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
-import { CameraView, useCameraPermissions } from 'expo-camera'
-import { Theme } from '@/constants/colors'
-import { FontSize, Spacing } from '@/constants/typography'
-import { useImagePicker } from '@/hooks/useImagePicker'
+import { Theme } from "@/constants/colors";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { router, useLocalSearchParams } from "expo-router";
+import { useRef, useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function CameraScreen() {
-  const { mode } = useLocalSearchParams<{ mode?: string }>()
-  const [permission, requestPermission] = useCameraPermissions()
-  const [facing, setFacing] = useState<'front' | 'back'>('back')
-  const [flash, setFlash] = useState<'off' | 'on'>('off')
-  const cameraRef = useRef<CameraView>(null)
-  const { pickFromGallery, isLoading } = useImagePicker()
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const [permission, requestPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState<"front" | "back">("back");
+  // const [flash, setFlash] = useState<'off' | 'on'>('off')
+  const [torchOn, setTorchOn] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
+  const { pickFromGallery, isLoading } = useImagePicker();
 
   function handleClose() {
-    router.back()
+    router.back();
   }
 
   function handleFlipCamera() {
-    setFacing((prev) => (prev === 'back' ? 'front' : 'back'))
+    setFacing((prev) => (prev === "back" ? "front" : "back"));
   }
 
+  // function handleToggleFlash() {
+  //   setFlash((prev) => (prev === 'off' ? 'on' : 'off'))
+  // }
+
   function handleToggleFlash() {
-    setFlash((prev) => (prev === 'off' ? 'on' : 'off'))
+    setTorchOn((prev) => !prev);
   }
 
   async function handleCapture() {
-    if (!cameraRef.current) return
+    if (!cameraRef.current) return;
 
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 1 })
-      if (!photo) return
-      router.push({ pathname: '/results', params: { imageUri: photo.uri } })
+      const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
+      if (!photo) return;
+      router.push({ pathname: "/results", params: { imageUri: photo.uri } });
     } catch {
-      Alert.alert('Error', 'Failed to take photo. Please try again.')
+      Alert.alert("Error", "Failed to take photo. Please try again.");
     }
   }
 
   async function handleGallery() {
-    const uri = await pickFromGallery()
+    const uri = await pickFromGallery();
     if (uri) {
-      router.push({ pathname: '/results', params: { imageUri: uri } })
+      router.push({ pathname: "/results", params: { imageUri: uri } });
     }
   }
 
   if (!permission) {
-    return <View style={styles.container} />
+    return <View style={styles.container} />;
   }
 
   if (!permission.granted) {
@@ -57,14 +62,17 @@ export default function CameraScreen() {
         <Text style={styles.permissionSubtitle}>
           Smart OCR needs camera access to scan documents
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
       </View>
-    )
+    );
   }
 
   return (
@@ -73,11 +81,10 @@ export default function CameraScreen() {
         ref={cameraRef}
         style={styles.camera}
         facing={facing}
-        flash={flash}
+        enableTorch={torchOn}
       />
 
       <View style={styles.overlay}>
-
         <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
           <Text style={styles.closeText}>✕</Text>
         </TouchableOpacity>
@@ -91,8 +98,11 @@ export default function CameraScreen() {
         </View>
 
         <View style={styles.controls}>
-          <TouchableOpacity style={styles.controlButton} onPress={handleToggleFlash}>
-            <Text style={styles.controlText}>{flash === 'off' ? '⚡️' : '🔦'}</Text>
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handleToggleFlash}
+          >
+            <Text style={styles.controlText}>{torchOn ? "🔦" : "⚡️"}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -103,61 +113,63 @@ export default function CameraScreen() {
             <View style={styles.shutterInner} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton} onPress={handleFlipCamera}>
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handleFlipCamera}
+          >
             <Text style={styles.controlText}>🔄</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.galleryButton} onPress={handleGallery}>
-          <Text style={styles.galleryText}>🖼  Choose from Gallery</Text>
+          <Text style={styles.galleryText}>🖼 Choose from Gallery</Text>
         </TouchableOpacity>
-
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   camera: {
     flex: 1,
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingTop: Spacing.xl3,
     paddingBottom: Spacing.xl2,
     paddingHorizontal: Spacing.lg,
   },
   closeButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(0,0,0,0.5)",
     borderRadius: 20,
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   closeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   frameContainer: {
     flex: 1,
     marginVertical: Spacing.xl,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 30,
     height: 30,
     borderColor: Theme.accent,
@@ -188,21 +200,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
   },
   frameGuide: {
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     fontSize: FontSize.caption,
-    textAlign: 'center',
+    textAlign: "center",
   },
   controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: Spacing.xl,
   },
   controlButton: {
     width: 50,
     height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   controlText: {
     fontSize: 28,
@@ -213,29 +225,34 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     borderWidth: 3,
     borderColor: Theme.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   shutterInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   galleryButton: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl2,
+    borderRadius: Radius.button,
+    borderWidth: 1.5,
+    borderColor: Theme.accent,
+    backgroundColor: "rgba(6,182,212,0.15)",
   },
   galleryText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: Theme.accent,
     fontSize: FontSize.body,
+    fontWeight: "600",
   },
   permissionContainer: {
     flex: 1,
     backgroundColor: Theme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: Spacing.xl3,
   },
   permissionIcon: {
@@ -244,15 +261,15 @@ const styles = StyleSheet.create({
   },
   permissionTitle: {
     fontSize: FontSize.h1,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Theme.textPrimary,
     marginBottom: Spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   permissionSubtitle: {
     fontSize: FontSize.body,
     color: Theme.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: Spacing.xl2,
   },
   permissionButton: {
@@ -265,7 +282,7 @@ const styles = StyleSheet.create({
   permissionButtonText: {
     color: Theme.background,
     fontSize: FontSize.body,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   cancelButton: {
     paddingVertical: Spacing.sm,
@@ -274,4 +291,4 @@ const styles = StyleSheet.create({
     color: Theme.textSecondary,
     fontSize: FontSize.body,
   },
-})
+});
