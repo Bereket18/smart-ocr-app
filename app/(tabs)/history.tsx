@@ -1,31 +1,49 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native'
-import { router } from 'expo-router'
-import { Theme } from '@/constants/colors'
-import { FontSize, Spacing, Radius } from '@/constants/typography'
-import { useScanStore } from '@/store/scanStore'
-import { Scan } from '@/types'
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  RefreshControl,
+} from "react-native";
+import { router } from "expo-router";
+import { Theme } from "@/constants/colors";
+import { FontSize, Spacing, Radius } from "@/constants/typography";
+import { useScanStore } from "@/store/scanStore";
+import { useFirebase } from "@/hooks/useFirebase";
+import { Scan } from "@/types";
 
 export default function HistoryScreen() {
-  const { scans, deleteScan, setActiveScan } = useScanStore()
+  const { scans, setActiveScan } = useScanStore();
+  const { fetchScans, removeScan, error } = useFirebase();
+  const [refreshing, setRefreshing] = useState(false);
 
-  function handlePress(scan: Scan) {
-    setActiveScan(scan)
-    router.push('/results')
+  useEffect(() => {
+    fetchScans();
+  }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await fetchScans();
+    setRefreshing(false);
   }
 
-  function handleDelete(id: string) {
-    Alert.alert(
-      'Delete Scan',
-      'Are you sure you want to delete this scan?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteScan(id),
-        },
-      ]
-    )
+  function handlePress(scan: Scan) {
+    setActiveScan(scan);
+    router.push("/results");
+  }
+
+  function handleDelete(scan: Scan) {
+    Alert.alert("Delete Scan", "Are you sure you want to delete this scan?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => removeScan(scan),
+      },
+    ]);
   }
 
   function renderEmpty() {
@@ -33,47 +51,67 @@ export default function HistoryScreen() {
       <View style={styles.emptyState}>
         <Text style={styles.emptyIcon}>🕐</Text>
         <Text style={styles.emptyTitle}>No scans yet</Text>
-        <Text style={styles.emptySubtitle}>Your scan history will appear here</Text>
+        <Text style={styles.emptySubtitle}>
+          Your scan history will appear here
+        </Text>
       </View>
-    )
+    );
   }
 
   function renderItem({ item }: { item: Scan }) {
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => handlePress(item)}
-      >
+      <TouchableOpacity style={styles.card} onPress={() => handlePress(item)}>
         <View style={styles.cardContent}>
           <Text style={styles.cardText} numberOfLines={2}>
-            {item.editedText || 'No text extracted'}
+            {item.editedText || "No text extracted"}
           </Text>
           <View style={styles.cardMeta}>
-            <Text style={styles.cardDate}>{item.createdAt.slice(0, 10)}</Text>
-            <Text style={styles.cardBadge}>{item.language.toUpperCase()}</Text>
+            <Text style={styles.cardDate}>
+              {item.createdAt?.toString().slice(0, 10) ?? ""}
+            </Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {item.language.toUpperCase()}
+              </Text>
+            </View>
+            {!item.synced && (
+              <Text style={styles.unsyncedBadge}>⏳ Not saved</Text>
+            )}
           </View>
         </View>
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => handleDelete(item.id)}
+          onPress={() => handleDelete(item)}
         >
           <Text style={styles.deleteText}>🗑</Text>
         </TouchableOpacity>
       </TouchableOpacity>
-    )
+    );
   }
 
   return (
     <View style={styles.container}>
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>⚠️ {error}</Text>
+        </View>
+      )}
       <FlatList
         data={scans}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={Theme.accent}
+          />
+        }
       />
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -85,10 +123,19 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     flexGrow: 1,
   },
+  errorBanner: {
+    backgroundColor: Theme.error,
+    padding: Spacing.sm,
+    alignItems: "center",
+  },
+  errorText: {
+    color: Theme.textPrimary,
+    fontSize: FontSize.caption,
+  },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: Spacing.xl4,
   },
   emptyIcon: {
@@ -97,14 +144,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: FontSize.h1,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Theme.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: FontSize.body,
     color: Theme.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   card: {
     backgroundColor: Theme.surface,
@@ -113,8 +160,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     borderWidth: 1,
     borderColor: Theme.border,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   cardContent: {
     flex: 1,
@@ -125,22 +172,28 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   cardMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.sm,
   },
   cardDate: {
     fontSize: FontSize.caption,
     color: Theme.textSecondary,
   },
-  cardBadge: {
-    fontSize: FontSize.badge,
-    fontWeight: 'bold',
-    color: Theme.accent,
-    backgroundColor: Theme.background,
+  badge: {
+    backgroundColor: Theme.accent,
+    borderRadius: Radius.badge,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
-    borderRadius: Radius.badge,
+  },
+  badgeText: {
+    color: Theme.background,
+    fontSize: FontSize.badge,
+    fontWeight: "bold",
+  },
+  unsyncedBadge: {
+    fontSize: FontSize.badge,
+    color: Theme.warning,
   },
   deleteButton: {
     padding: Spacing.sm,
@@ -148,4 +201,4 @@ const styles = StyleSheet.create({
   deleteText: {
     fontSize: 18,
   },
-})
+});
