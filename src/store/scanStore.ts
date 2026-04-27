@@ -14,6 +14,9 @@ const useScanStore = create<ScanStore>((set, get) => ({
   error: null,
   multiPageSession: initialMultiPageSession,
 
+  setScans: (newScans) =>
+  set({ scans: newScans }),
+
   addScan: (scan) =>
     set((state) => ({ scans: [scan, ...state.scans] })),
 
