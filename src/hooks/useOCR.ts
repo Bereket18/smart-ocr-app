@@ -1,5 +1,5 @@
-import { recognizeText } from "@/services/ocr.service";
-import { OCRState } from "@/types";
+import { OCRState } from '../types/index'
+import { recognizeText } from '../services/ocr.service'
 import { useCallback, useState } from "react";
 
 const initialState: OCRState = {
