@@ -1,4 +1,4 @@
-import { OCRResult } from '@/types'
+import { OCRResult } from '../types/index'
 import NetInfo from '@react-native-community/netinfo'
 
 const VISION_URL = 'https://vision.googleapis.com/v1/images:annotate'
