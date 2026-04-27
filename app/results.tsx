@@ -15,12 +15,15 @@ import { useOCR } from "@/hooks/useOCR";
 import { useScanStore } from "@/store/scanStore";
 import { TextEditor } from "@/components/TextEditor";
 import { generateId, formatDate } from "@/utils/formatters";
+import { useFirebase } from "@/hooks/useFirebase";
+import { Scan } from "@/types";
 
 export default function ResultsScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
   const { activeScan } = useScanStore();
   const { status, text, language, error, processImage, reset } = useOCR();
   const { addScan } = useScanStore();
+  const { saveScan, isUploading, uploadProgress } = useFirebase();
   const savedText = useRef("");
 
   useEffect(() => {
@@ -31,32 +34,33 @@ export default function ResultsScreen() {
     }
   }, [imageUri]);
 
-  function handleSave() {
-    if (!text && !activeScan) return;
+ async function handleSave() {
+   if (!text && !activeScan) return;
 
-    const scanText = savedText.current || text;
+   const scanText = savedText.current || text;
 
-    const newScan = {
-      id: generateId(),
-      imageUri: imageUri ?? activeScan?.imageUri ?? "",
-      imageUrl: "",
-      extractedText: text || activeScan?.extractedText || "",
-      editedText: scanText,
-      language: language || activeScan?.language || "und",
-      summary: null,
-      translation: null,
-      createdAt: new Date().toISOString(),
-      pageCount: 1,
-      tags: [],
-      folderId: null,
-      synced: false,
-    };
+   const newScan: Scan = {
+     id: activeScan?.id ?? generateId(),
+     imageUri: imageUri ?? activeScan?.imageUri ?? "",
+     imageUrl: activeScan?.imageUrl ?? "",
+     extractedText: text || activeScan?.extractedText || "",
+     editedText: scanText,
+     language: language || activeScan?.language || "und",
+     summary: null,
+     translation: null,
+     createdAt: activeScan?.createdAt ?? new Date().toISOString(),
+     pageCount: 1,
+     tags: [],
+     folderId: null,
+     synced: false,
+   };
 
-    addScan(newScan);
-    Alert.alert("Saved", "Scan saved to history", [
-      { text: "OK", onPress: () => router.push("/history") },
-    ]);
-  }
+   await saveScan(newScan);
+
+   Alert.alert("Saved", "Scan saved to history", [
+     { text: "OK", onPress: () => router.push("/history") },
+   ]);
+ }
 
   function renderContent() {
     if (status === "processing") {
@@ -113,6 +117,7 @@ export default function ResultsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerMeta}>
+          {/* Language Badge */}
           {language || activeScan?.language ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
@@ -120,18 +125,25 @@ export default function ResultsScreen() {
               </Text>
             </View>
           ) : null}
-          {status === "success" && (
-            <Text style={styles.metaText}>
-              {formatDate(new Date().toISOString())}
-            </Text>
+
+          {/* Save Button (Only one copy needed here) */}
+          {(status === "success" || activeScan) && (
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                isUploading && styles.saveButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={isUploading}
+            >
+              <Text style={styles.saveButtonText}>
+                {isUploading
+                  ? `Saving... ${Math.round(uploadProgress * 100)}%`
+                  : "💾  Save"}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
-
-        {(status === "success" || activeScan) && (
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>💾 Save</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       <ScrollView
@@ -234,5 +246,8 @@ const styles = StyleSheet.create({
     color: Theme.background,
     fontSize: FontSize.body,
     fontWeight: "bold",
+  },
+  saveButtonDisabled: {
+    backgroundColor: Theme.border,
   },
 });
