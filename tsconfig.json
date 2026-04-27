@@ -5,13 +5,14 @@
     "allowJs": true,
     "noEmit": true,
     "baseUrl": ".",
+    "types": [
+      "node"
+    ],
     "paths": {
       "@/*": [
         "./src/*"
       ]
-    },
-    "module": "ESNext",
-    "forceConsistentCasingInFileNames": true
+    }
   },
   "include": [
     "**/*.ts",
