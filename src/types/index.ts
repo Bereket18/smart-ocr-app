@@ -48,6 +48,7 @@ export interface ScanStore {
   isProcessing: boolean
   error: string | null
   multiPageSession: MultiPageSession
+  setScans: (scans: Scan[]) => void
   addScan: (scan: Scan) => void
   deleteScan: (id: string) => void
   setActiveScan: (scan: Scan | null) => void
