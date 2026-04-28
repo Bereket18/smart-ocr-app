@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInAnonymously } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
@@ -21,7 +26,26 @@ export const storage = getStorage(
   'gs://netflix-replica-02.firebasestorage.app'
 )
 
-export async function signInAnon(): Promise<string> {
-  const userCredential = await signInAnonymously(auth)
-  return userCredential.user.uid
+export async function registerUser(
+  email: string,
+  password: string
+): Promise<string> {
+  const credential = await createUserWithEmailAndPassword(auth, email, password)
+  return credential.user.uid
+}
+
+export async function loginUser(
+  email: string,
+  password: string
+): Promise<string> {
+  const credential = await signInWithEmailAndPassword(auth, email, password)
+  return credential.user.uid
+}
+
+export async function logoutUser(): Promise<void> {
+  await signOut(auth)
+}
+
+export function getCurrentUserId(): string | null {
+  return auth.currentUser?.uid ?? null
 }
