@@ -1,135 +1,134 @@
-import { db, signInAnon, storage } from "@/services/firebase.service";
-import { useScanStore } from "@/store/scanStore";
-import { Scan } from "@/types";
+import { useState } from 'react'
 import {
-  addDoc,
   collection,
+  addDoc,
+  getDocs,
   deleteDoc,
   doc,
-  getDocs,
-  orderBy,
-  query,
   serverTimestamp,
-} from "firebase/firestore";
+  setDoc,
+} from 'firebase/firestore'
 import {
-  deleteObject,
-  getDownloadURL,
   ref,
   uploadBytes,
-} from "firebase/storage";
-import { useState } from "react";
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage'
+import { db, storage, getCurrentUserId } from '../services/firebase.service'
+import { useScanStore } from '../store/scanStore'
+import { Scan } from '../types/index'
 
 export function useFirebase() {
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const { addScan, deleteScan, scans } = useScanStore();
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
-async function saveScan(scan: Scan): Promise<void> {
-  try {
-    setIsUploading(true)
-    setError(null)
-    setUploadProgress(0)
+  async function saveScan(scan: Scan): Promise<void> {
+    try {
+      setIsUploading(true)
+      setError(null)
+      setUploadProgress(0)
 
-    const userId = await signInAnon()
+      const userId = getCurrentUserId()
+      if (!userId) throw new Error('NOT_AUTHENTICATED')
 
-    let imageUrl = scan.imageUrl
+      let imageUrl = scan.imageUrl
 
-    if (!imageUrl && scan.imageUri) {
-      const response = await fetch(scan.imageUri)
-      const blob = await response.blob()
-      setUploadProgress(0.3)
+      if (!imageUrl && scan.imageUri) {
+        const response = await fetch(scan.imageUri)
+        const blob = await response.blob()
+        setUploadProgress(0.3)
 
-      const imageRef = ref(storage, `users/${userId}/scans/${scan.id}.jpg`)
-      await uploadBytes(imageRef, blob)
-      setUploadProgress(0.6)
+        const imageRef = ref(storage, `users/${userId}/scans/${scan.id}.jpg`)
+        await uploadBytes(imageRef, blob)
+        setUploadProgress(0.6)
 
-      imageUrl = await getDownloadURL(imageRef)
-      setUploadProgress(0.8)
-    }
+        imageUrl = await getDownloadURL(imageRef)
+        setUploadProgress(0.8)
+      }
 
-    const { setDoc, doc: firestoreDoc } = await import('firebase/firestore')
+      await setDoc(
+        doc(db, 'users', userId, 'scans', scan.id),
+        {
+          ...scan,
+          imageUrl: imageUrl ?? '',
+          synced: true,
+          createdAt: serverTimestamp(),
+        },
+        { merge: true }
+      )
 
-    await setDoc(
-      firestoreDoc(db, 'users', userId, 'scans', scan.id),
-      {
+      setUploadProgress(1)
+
+      const updatedScan: Scan = {
         ...scan,
         imageUrl: imageUrl ?? '',
         synced: true,
-        createdAt: serverTimestamp(),
-      },
-      { merge: true }
-    )
+        createdAt: new Date().toISOString(),
+      }
 
-    setUploadProgress(1)
+      useScanStore.getState().addScan(updatedScan)
 
-    const updatedScan: Scan = {
-      ...scan,
-      imageUrl: imageUrl ?? '',
-      synced: true,
-      createdAt: new Date().toISOString(),
+    } catch (err: any) {
+      console.log('Save error:', err.message)
+      setError(err.message ?? 'SAVE_FAILED')
+    } finally {
+      setIsUploading(false)
     }
-
-    useScanStore.getState().addScan(updatedScan)
-
-  } catch (err: any) {
-    console.log('Save error:', err.message)
-    setError(err.message ?? 'SAVE_FAILED')
-  } finally {
-    setIsUploading(false)
   }
-}
 
-async function fetchScans(): Promise<void> {
-  try {
-    setError(null)
-    const userId = await signInAnon()
+  async function fetchScans(): Promise<void> {
+    try {
+      setError(null)
+      const userId = getCurrentUserId()
+      if (!userId) return
 
-    const q = query(
-      collection(db, 'users', userId, 'scans'),
-      orderBy('createdAt', 'desc')
-    )
+      const snapshot = await getDocs(
+        collection(db, 'users', userId, 'scans')
+      )
 
-    const snapshot = await getDocs(q)
+      if (snapshot.docs.length === 0) return
 
-    if (snapshot.docs.length === 0) return
+      const fetchedScans: Scan[] = snapshot.docs.map((document) => {
+        const data = document.data()
+        let formattedDate = new Date().toISOString()
+        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+          formattedDate = data.createdAt.toDate().toISOString()
+        }
+        return {
+          ...(data as Scan),
+          id: document.id,
+          createdAt: formattedDate,
+          synced: true,
+        }
+      })
 
-    const fetchedScans: Scan[] = snapshot.docs.map((document) => {
-      const data = document.data()
-      let formattedDate = new Date().toISOString()
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        formattedDate = data.createdAt.toDate().toISOString()
-      }
-      return {
-        ...(data as Scan),
-        id: document.id,
-        createdAt: formattedDate,
-        synced: true,
-      }
-    })
+      useScanStore.getState().setScans(fetchedScans)
 
-    useScanStore.getState().setScans(fetchedScans)
-
-  } catch (err: any) {
-    console.log('Fetch error:', err.message)
-    setError(err.message ?? 'FETCH_FAILED')
+    } catch (err: any) {
+      console.log('Fetch error:', err.message)
+      setError(err.message ?? 'FETCH_FAILED')
+    }
   }
-}
+
   async function removeScan(scan: Scan): Promise<void> {
     try {
-      setError(null);
-      const userId = await signInAnon();
+      setError(null)
+      const userId = getCurrentUserId()
+      if (!userId) throw new Error('NOT_AUTHENTICATED')
 
-      await deleteDoc(doc(db, "users", userId, "scans", scan.id));
+      await deleteDoc(doc(db, 'users', userId, 'scans', scan.id))
 
       if (scan.imageUrl) {
-        const imageRef = ref(storage, `users/${userId}/scans/${scan.id}.jpg`);
-        await deleteObject(imageRef);
+        const imageRef = ref(storage, `users/${userId}/scans/${scan.id}.jpg`)
+        await deleteObject(imageRef)
       }
 
-      deleteScan(scan.id);
+      useScanStore.getState().deleteScan(scan.id)
+
     } catch (err: any) {
-      setError(err.message ?? "DELETE_FAILED");
+      console.log('Delete error:', err.message)
+      setError(err.message ?? 'DELETE_FAILED')
     }
   }
 
@@ -140,5 +139,5 @@ async function fetchScans(): Promise<void> {
     isUploading,
     uploadProgress,
     error,
-  };
+  }
 }
