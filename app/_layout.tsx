@@ -1,8 +1,44 @@
-import { Theme } from "@/constants/colors";
-import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View, ActivityIndicator } from "react-native";
+import { Theme } from "@/constants/colors";
+import { auth } from "@/services/firebase.service";
 
 export default function RootLayout() {
+  const [isReady, setIsReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+      setIsReady(true);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (!isLoggedIn) {
+      router.replace("/login");
+    }
+  }, [isReady, isLoggedIn]);
+
+  if (!isReady) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: Theme.background,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator color={Theme.accent} size="large" />
+      </View>
+    );
+  }
+
   return (
     <>
       <StatusBar style="light" />
@@ -14,6 +50,7 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: Theme.background },
         }}
       >
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="camera"
