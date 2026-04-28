@@ -7,7 +7,7 @@ import { useScanStore } from "@/store/scanStore";
 import { Scan } from "@/types";
 import { generateId } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,9 @@ import {
   View,
 } from "react-native";
 
+import { useExport } from "@/hooks/useExport";
+import { BottomSheet } from "@/components/BottomSheet";
+
 export default function ResultsScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
   const { activeScan } = useScanStore();
@@ -25,6 +28,8 @@ export default function ResultsScreen() {
   const { addScan } = useScanStore();
   const { saveScan, isUploading, uploadProgress } = useFirebase();
   const savedText = useRef("");
+  const { exportAsTXT, exportAsPDF, shareText, isExporting } = useExport();
+  const [showExport, setShowExport] = useState(false);
 
   useEffect(() => {
     if (imageUri) {
@@ -114,6 +119,30 @@ export default function ResultsScreen() {
     );
   }
 
+  const exportOptions = [
+    {
+      icon: "📄",
+      label: "Export as TXT",
+      description: "Plain text file you can open anywhere",
+      onPress: () =>
+        exportAsTXT(savedText.current || text || activeScan?.editedText || ""),
+    },
+    {
+      icon: "📋",
+      label: "Export as PDF",
+      description: "Formatted PDF document",
+      onPress: () =>
+        exportAsPDF(savedText.current || text || activeScan?.editedText || ""),
+    },
+    {
+      icon: "📤",
+      label: "Share Text",
+      description: "Share via any app on your phone",
+      onPress: () =>
+        shareText(savedText.current || text || activeScan?.editedText || ""),
+    },
+  ];
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -127,7 +156,6 @@ export default function ResultsScreen() {
             </View>
           ) : null}
 
-          {/* Save Button (Only one copy needed here) */}
           {(status === "success" || activeScan) && (
             <TouchableOpacity
               style={[
@@ -144,6 +172,49 @@ export default function ResultsScreen() {
               </Text>
             </TouchableOpacity>
           )}
+
+          <View style={styles.header}>
+            <View style={styles.headerMeta}>
+              {language || activeScan?.language ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {(language || activeScan?.language || "und").toUpperCase()}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            <View style={styles.headerButtons}>
+              {(status === "success" || activeScan) && (
+                <TouchableOpacity
+                  style={styles.exportButton}
+                  onPress={() => setShowExport(true)}
+                  disabled={isExporting}
+                >
+                  <Text style={styles.exportButtonText}>
+                    {isExporting ? "..." : "📤"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {(status === "success" || activeScan) && (
+                <TouchableOpacity
+                  style={[
+                    styles.saveButton,
+                    isUploading && styles.saveButtonDisabled,
+                  ]}
+                  onPress={handleSave}
+                  disabled={isUploading}
+                >
+                  <Text style={styles.saveButtonText}>
+                    {isUploading
+                      ? `${Math.round(uploadProgress * 100)}%`
+                      : "💾  Save"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </View>
       </View>
 
@@ -154,6 +225,12 @@ export default function ResultsScreen() {
       >
         {renderContent()}
       </ScrollView>
+
+      <BottomSheet
+        visible={showExport}
+        onClose={() => setShowExport(false)}
+        options={exportOptions}
+      />
     </View>
   );
 }
@@ -250,5 +327,21 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     backgroundColor: Theme.border,
+  },
+  headerButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  exportButton: {
+    backgroundColor: Theme.surface,
+    borderRadius: Radius.button,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Theme.border,
+  },
+  exportButtonText: {
+    fontSize: 18,
   },
 });
