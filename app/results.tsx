@@ -1,22 +1,22 @@
-import { useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { TextEditor } from "@/components/TextEditor";
 import { Theme } from "@/constants/colors";
-import { FontSize, Spacing, Radius } from "@/constants/typography";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
+import { useFirebase } from "@/hooks/useFirebase";
 import { useOCR } from "@/hooks/useOCR";
 import { useScanStore } from "@/store/scanStore";
-import { TextEditor } from "@/components/TextEditor";
-import { generateId, formatDate } from "@/utils/formatters";
-import { useFirebase } from "@/hooks/useFirebase";
 import { Scan } from "@/types";
+import { generateId } from "@/utils/formatters";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function ResultsScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
@@ -34,33 +34,34 @@ export default function ResultsScreen() {
     }
   }, [imageUri]);
 
- async function handleSave() {
-   if (!text && !activeScan) return;
+  async function handleSave() {
+    const currentText =
+      savedText.current || text || activeScan?.editedText || "";
 
-   const scanText = savedText.current || text;
+    if (!currentText.trim()) return;
 
-   const newScan: Scan = {
-     id: activeScan?.id ?? generateId(),
-     imageUri: imageUri ?? activeScan?.imageUri ?? "",
-     imageUrl: activeScan?.imageUrl ?? "",
-     extractedText: text || activeScan?.extractedText || "",
-     editedText: scanText,
-     language: language || activeScan?.language || "und",
-     summary: null,
-     translation: null,
-     createdAt: activeScan?.createdAt ?? new Date().toISOString(),
-     pageCount: 1,
-     tags: [],
-     folderId: null,
-     synced: false,
-   };
+    const newScan: Scan = {
+      id: activeScan?.id ?? generateId(),
+      imageUri: imageUri ?? activeScan?.imageUri ?? "",
+      imageUrl: activeScan?.imageUrl ?? "",
+      extractedText: text || activeScan?.extractedText || "",
+      editedText: currentText,
+      language: language || activeScan?.language || "und",
+      summary: null,
+      translation: null,
+      createdAt: activeScan?.createdAt ?? new Date().toISOString(),
+      pageCount: 1,
+      tags: [],
+      folderId: null,
+      synced: false,
+    };
 
-   await saveScan(newScan);
+    await saveScan(newScan);
 
-   Alert.alert("Saved", "Scan saved to history", [
-     { text: "OK", onPress: () => router.push("/history") },
-   ]);
- }
+    Alert.alert("Saved", "Scan saved to history", [
+      { text: "OK", onPress: () => router.push("/history") },
+    ]);
+  }
 
   function renderContent() {
     if (status === "processing") {
