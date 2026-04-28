@@ -36,14 +36,14 @@ React Native lets you write JavaScript/TypeScript and it turns into a real iOS a
 
 ```js
 // This TypeScript/JavaScript code...
-import { View, Text } from 'react-native'
+import { View, Text } from "react-native";
 
 export default function App() {
   return (
     <View>
       <Text>Hello World</Text>
     </View>
-  )
+  );
 }
 
 // ...becomes a real native iOS app on your iPhone
@@ -76,18 +76,18 @@ Zustand is a whiteboard mounted in the hallway. Every room can read it and write
 ```ts
 // Without Zustand — data dies when you navigate away
 function CameraScreen() {
-  const [text, setText] = useState('')  // Dies when you leave this screen
+  const [text, setText] = useState(""); // Dies when you leave this screen
 }
 
 // With Zustand — data lives for the whole app session
 const useStore = create((set) => ({
-  text: '',
-  setText: (value) => set({ text: value })
-}))
+  text: "",
+  setText: (value) => set({ text: value }),
+}));
 
 // Any screen can read it
 function HistoryScreen() {
-  const { text } = useStore()  // Still there even after leaving Camera
+  const { text } = useStore(); // Still there even after leaving Camera
 }
 ```
 
@@ -131,15 +131,15 @@ No setup. No registration. Just create the file and the route exists.
 
 ```ts
 // To navigate to the camera screen from anywhere:
-import { router } from 'expo-router'
+import { router } from "expo-router";
 
-router.push('/camera')
+router.push("/camera");
 
 // To go back:
-router.back()
+router.back();
 
 // To pass data to another screen:
-router.push({ pathname: '/results', params: { imageUri: 'file://...' } })
+router.push({ pathname: "/results", params: { imageUri: "file://..." } });
 ```
 
 **Why file-based routing?**
@@ -158,13 +158,12 @@ The AI model runs entirely on the phone. No internet required. No API key. No co
 **Simple example:**
 
 ```ts
-
-import TextRecognition from '@react-native-ml-kit/text-recognition'
+import TextRecognition from "@react-native-ml-kit/text-recognition";
 
 // Give it an image path — get back the text
-const result = await TextRecognition.recognize('file:///path/to/photo.jpg')
+const result = await TextRecognition.recognize("file:///path/to/photo.jpg");
 
-console.log(result.blocks[0].text)  // "Hello World"
+console.log(result.blocks[0].text); // "Hello World"
 ```
 
 **Why ML Kit and not a cloud OCR API?**
@@ -190,8 +189,8 @@ Three separate Firebase services that work together:
 ```ts
 // Creates an anonymous account — no email, no password
 // Just gives each device installation a unique ID
-await signInAnonymously(auth)
-const userId = auth.currentUser.uid  // "abc123xyz"
+await signInAnonymously(auth);
+const userId = auth.currentUser.uid; // "abc123xyz"
 ```
 
 Anonymous auth means users can use the app immediately without signing up. Every installation gets a unique ID used to separate their data.
@@ -199,14 +198,14 @@ Anonymous auth means users can use the app immediately without signing up. Every
 
 ```ts
 // Save a scan document
-await addDoc(collection(db, 'users', userId, 'scans'), {
-  extractedText: 'Hello World',
-  language: 'en',
-  createdAt: serverTimestamp()
-})
+await addDoc(collection(db, "users", userId, "scans"), {
+  extractedText: "Hello World",
+  language: "en",
+  createdAt: serverTimestamp(),
+});
 
 // Read all scans
-const snapshot = await getDocs(collection(db, 'users', userId, 'scans'))
+const snapshot = await getDocs(collection(db, "users", userId, "scans"));
 ```
 
 Firestore is a database in the cloud. Data is organized in collections and documents — like folders and files.
@@ -214,11 +213,11 @@ Firestore is a database in the cloud. Data is organized in collections and docum
 
 ```ts
 // Upload an image file
-const storageRef = ref(storage, `users/${userId}/scans/${Date.now()}.jpg`)
-await uploadBytes(storageRef, imageBlob)
+const storageRef = ref(storage, `users/${userId}/scans/${Date.now()}.jpg`);
+await uploadBytes(storageRef, imageBlob);
 
 // Get a URL to display the image
-const url = await getDownloadURL(storageRef)
+const url = await getDownloadURL(storageRef);
 ```
 
 Storage is a file system in the cloud. You upload the image file, you get back a URL you can use anywhere.
@@ -237,24 +236,26 @@ The AI that generates summaries of scanned documents.
 One `fetch()` call. You send the extracted text. Claude sends back a bullet-point summary.
 
 ```ts
-const response = await fetch('https://api.anthropic.com/v1/messages', {
-  method: 'POST',
+const response = await fetch("https://api.anthropic.com/v1/messages", {
+  method: "POST",
   headers: {
-    'x-api-key': API_KEY,
-    'Content-Type': 'application/json'
+    "x-api-key": API_KEY,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    model: 'claude-sonnet-4-20250514',
+    model: "claude-sonnet-4-20250514",
     max_tokens: 600,
-    messages: [{
-      role: 'user',
-      content: `Summarize this in 5 bullet points:\n\n${scannedText}`
-    }]
-  })
-})
+    messages: [
+      {
+        role: "user",
+        content: `Summarize this in 5 bullet points:\n\n${scannedText}`,
+      },
+    ],
+  }),
+});
 
-const data = await response.json()
-const summary = data.content[0].text  // The bullet-point summary
+const data = await response.json();
+const summary = data.content[0].text; // The bullet-point summary
 ```
 
 No SDK needed. No complex setup. Just a regular HTTP request that any JavaScript developer already knows how to make.
@@ -269,15 +270,17 @@ Translates the extracted text into any language.
 ```ts
 // Translate English text to French
 const params = new URLSearchParams({
-  q: 'Hello World',
-  target: 'fr',
-  key: API_KEY
-})
+  q: "Hello World",
+  target: "fr",
+  key: API_KEY,
+});
 
-const response = await fetch(`https://translation.googleapis.com/language/translate/v2?${params}`)
-const data = await response.json()
+const response = await fetch(
+  `https://translation.googleapis.com/language/translate/v2?${params}`,
+);
+const data = await response.json();
 
-console.log(data.data.translations[0].translatedText)  // "Bonjour le monde"
+console.log(data.data.translations[0].translatedText); // "Bonjour le monde"
 ```
 
 One GET request. Returns the translated string. Done.
@@ -310,15 +313,15 @@ Expo handles all the iOS permission dialogs automatically.
 Opens the iPhone photo gallery so the user can pick an existing image.
 
 ```ts
-import * as ImagePicker from 'expo-image-picker'
+import * as ImagePicker from "expo-image-picker";
 
 const result = await ImagePicker.launchImageLibraryAsync({
-  mediaTypes: 'Images',
-  quality: 1
-})
+  mediaTypes: "Images",
+  quality: 1,
+});
 
 if (!result.canceled) {
-  console.log(result.assets[0].uri)  // Path to the selected image
+  console.log(result.assets[0].uri); // Path to the selected image
 }
 ```
 
@@ -332,15 +335,15 @@ Resizes and compresses images before OCR.
 A photo from an iPhone camera can be 5–8MB. That is too large for ML Kit to process quickly. We compress it to ~300KB first.
 
 ```ts
-import * as ImageManipulator from 'expo-image-manipulator'
+import * as ImageManipulator from "expo-image-manipulator";
 
 const compressed = await ImageManipulator.manipulateAsync(
   originalUri,
-  [{ resize: { width: 1920 } }],  // Max 1920px wide
-  { compress: 0.85, format: 'jpeg' }  // 85% quality JPEG
-)
+  [{ resize: { width: 1920 } }], // Max 1920px wide
+  { compress: 0.85, format: "jpeg" }, // 85% quality JPEG
+);
 
-console.log(compressed.uri)  // Path to the smaller image
+console.log(compressed.uri); // Path to the smaller image
 ```
 
 ---
@@ -351,9 +354,9 @@ console.log(compressed.uri)  // Path to the smaller image
 Lets the app copy text to the iPhone clipboard.
 
 ```ts
-import * as Clipboard from 'expo-clipboard'
+import * as Clipboard from "expo-clipboard";
 
-await Clipboard.setStringAsync('Hello World')
+await Clipboard.setStringAsync("Hello World");
 // User can now paste "Hello World" anywhere on their phone
 ```
 
@@ -367,13 +370,13 @@ Lets the app read and write files on the device.
 Used for creating TXT and PDF export files.
 
 ```ts
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from "expo-file-system";
 
 // Write a text file
-const path = FileSystem.documentDirectory + 'scan.txt'
-await FileSystem.writeAsStringAsync(path, 'Hello World', {
-  encoding: FileSystem.EncodingType.UTF8
-})
+const path = FileSystem.documentDirectory + "scan.txt";
+await FileSystem.writeAsStringAsync(path, "Hello World", {
+  encoding: FileSystem.EncodingType.UTF8,
+});
 ```
 
 `documentDirectory` is a private folder that belongs to your app. Files here survive app restarts but are deleted when the app is uninstalled.
@@ -386,12 +389,12 @@ await FileSystem.writeAsStringAsync(path, 'Hello World', {
 Opens the iOS share sheet — the panel with apps like Mail, WhatsApp, AirDrop, etc.
 
 ```ts
-import * as Sharing from 'expo-sharing'
+import * as Sharing from "expo-sharing";
 
 // Share a file — iOS shows the share sheet
 await Sharing.shareAsync(filePath, {
-  mimeType: 'text/plain'
-})
+  mimeType: "text/plain",
+});
 ```
 
 ---
@@ -402,10 +405,10 @@ await Sharing.shareAsync(filePath, {
 Converts HTML to a PDF file.
 
 ```ts
-import * as Print from 'expo-print'
+import * as Print from "expo-print";
 
-const html = `<html><body><h1>Scan</h1><p>${text}</p></body></html>`
-const { uri } = await Print.printToFileAsync({ html })
+const html = `<html><body><h1>Scan</h1><p>${text}</p></body></html>`;
+const { uri } = await Print.printToFileAsync({ html });
 // uri is the path to the generated PDF
 ```
 
@@ -417,18 +420,24 @@ const { uri } = await Print.printToFileAsync({ html })
 A local SQL database that lives on the device. Used in Phase 4 for offline mode.
 
 ```ts
-import * as SQLite from 'expo-sqlite'
+import * as SQLite from "expo-sqlite";
 
-const db = await SQLite.openDatabaseAsync('smartocr.db')
+const db = await SQLite.openDatabaseAsync("smartocr.db");
 
 // Create a table
-await db.execAsync('CREATE TABLE IF NOT EXISTS scans (id TEXT, data TEXT, synced INTEGER)')
+await db.execAsync(
+  "CREATE TABLE IF NOT EXISTS scans (id TEXT, data TEXT, synced INTEGER)",
+);
 
 // Insert a row
-await db.runAsync('INSERT INTO scans VALUES (?, ?, ?)', ['id1', JSON.stringify(scan), 0])
+await db.runAsync("INSERT INTO scans VALUES (?, ?, ?)", [
+  "id1",
+  JSON.stringify(scan),
+  0,
+]);
 
 // Read rows
-const rows = await db.getAllAsync('SELECT * FROM scans WHERE synced = 0')
+const rows = await db.getAllAsync("SELECT * FROM scans WHERE synced = 0");
 ```
 
 This is a real SQL database running on the phone. It persists between app sessions and survives phone restarts.
@@ -601,7 +610,7 @@ A hook is a function that starts with `use`. It can use React features like `use
 
 ```ts
 // Inside a screen component:
-const { pickFromCamera, isLoading, error } = useImagePicker()
+const { pickFromCamera, isLoading, error } = useImagePicker();
 
 // Now you have:
 // pickFromCamera() — call this when user taps Scan Now

@@ -1,5 +1,7 @@
 # Sprint 1 — Documentation
+
 ## Files: types/index.ts · colors.ts · typography.ts · scanStore.ts
+
 ---
 
 ## Before We Start — TypeScript Terms You Will See Everywhere
@@ -17,26 +19,26 @@ In JavaScript you can create any object with any shape:
 const scan = {
   id: "123",
   text: "hello",
-  anything: true
-}
+  anything: true,
+};
 ```
 
 In TypeScript, an `interface` is a contract. It says: any object that claims to be this type **must** have exactly these fields with exactly these types.
 
 ```ts
 interface Scan {
-  id: string
-  text: string
+  id: string;
+  text: string;
 }
 
 // ✅ This is fine
-const scan: Scan = { id: "123", text: "hello" }
+const scan: Scan = { id: "123", text: "hello" };
 
 // ❌ TypeScript error — missing "text"
-const scan: Scan = { id: "123" }
+const scan: Scan = { id: "123" };
 
 // ❌ TypeScript error — id must be a string, not a number
-const scan: Scan = { id: 123, text: "hello" }
+const scan: Scan = { id: 123, text: "hello" };
 ```
 
 Think of it like a form with required fields. Every field must be filled in with the right type of value.
@@ -48,7 +50,7 @@ Think of it like a form with required fields. Every field must be filled in with
 `type` is similar to `interface` but used for simpler things — especially when you want to say "this value can only be one of these specific options."
 
 ```ts
-type OCRStatus = 'idle' | 'processing' | 'success' | 'error'
+type OCRStatus = "idle" | "processing" | "success" | "error";
 ```
 
 The `|` means OR. So `OCRStatus` can only ever be one of those four exact strings. If you type `'loading'` by mistake, TypeScript will catch it immediately.
@@ -76,7 +78,7 @@ import { Scan } from '@/types'
 The `|` means OR. `string | null` means this value is either a string OR null (nothing).
 
 ```ts
-summary: string | null
+summary: string | null;
 ```
 
 This is how you say: "this field starts as nothing, but will eventually have a value." You see this on `summary`, `translation`, and `folderId` — they are empty until Phase 3 or 5 fills them in.
@@ -89,10 +91,10 @@ This locks the values so TypeScript treats them as exact values, not general typ
 
 ```ts
 // Without as const — TypeScript sees: accent is "some string"
-const Colors = { dark: { accent: '#06B6D4' } }
+const Colors = { dark: { accent: "#06B6D4" } };
 
 // With as const — TypeScript sees: accent is exactly '#06B6D4'
-const Colors = { dark: { accent: '#06B6D4' } } as const
+const Colors = { dark: { accent: "#06B6D4" } } as const;
 ```
 
 Why does this matter? Some React Native style properties only accept specific values. `as const` tells TypeScript the exact value, so it can confirm it is valid.
@@ -143,10 +145,10 @@ The `@/` maps to the `src/` folder. Configured in `tsconfig.json`.
 
 ```ts
 // Without alias — ugly and fragile
-import { Scan } from '../../types/index'
+import { Scan } from "../../types/index";
 
 // With alias — clean and always works
-import { Scan } from '@/types'
+import { Scan } from "@/types";
 ```
 
 ---
@@ -282,37 +284,37 @@ Same reason as colors — change one number here and it updates everywhere. Also
 
 **FontSize** — from largest to smallest, each with a specific purpose:
 
-| Token | Size | Used For |
-|---|---|---|
-| `display` | 32sp | App name on splash, empty state titles |
-| `h1` | 24sp | Screen titles |
-| `h2` | 18sp | Section headers |
-| `bodyLarge` | 16sp | Extracted text, main content |
-| `body` | 14sp | Card text, list items |
-| `caption` | 12sp | Timestamps, word count |
-| `badge` | 11sp | Language badge, status chips |
+| Token       | Size | Used For                               |
+| ----------- | ---- | -------------------------------------- |
+| `display`   | 32sp | App name on splash, empty state titles |
+| `h1`        | 24sp | Screen titles                          |
+| `h2`        | 18sp | Section headers                        |
+| `bodyLarge` | 16sp | Extracted text, main content           |
+| `body`      | 14sp | Card text, list items                  |
+| `caption`   | 12sp | Timestamps, word count                 |
+| `badge`     | 11sp | Language badge, status chips           |
 
 **Spacing** — based on a 4-point grid. Every value is a multiple of 4:
 
-| Token | Value | Used For |
-|---|---|---|
-| `xs` | 4 | Tiny gaps between related items |
-| `sm` | 8 | Icon padding, chip padding |
-| `md` | 12 | Input padding |
-| `lg` | 16 | Card padding, screen margins |
-| `xl` | 20 | Between major sections |
-| `xl2` | 24 | Modal header padding |
-| `xl3` | 32 | Screen top padding |
-| `xl4` | 48 | Empty state spacing |
+| Token | Value | Used For                        |
+| ----- | ----- | ------------------------------- |
+| `xs`  | 4     | Tiny gaps between related items |
+| `sm`  | 8     | Icon padding, chip padding      |
+| `md`  | 12    | Input padding                   |
+| `lg`  | 16    | Card padding, screen margins    |
+| `xl`  | 20    | Between major sections          |
+| `xl2` | 24    | Modal header padding            |
+| `xl3` | 32    | Screen top padding              |
+| `xl4` | 48    | Empty state spacing             |
 
 **Radius** — how rounded the corners are:
 
-| Token | Value | Used For |
-|---|---|---|
-| `card` | 12 | All card components |
-| `button` | 8 | All buttons |
-| `input` | 8 | All text inputs |
-| `badge` | 999 | Language badge — fully round pill shape |
+| Token    | Value | Used For                                |
+| -------- | ----- | --------------------------------------- |
+| `card`   | 12    | All card components                     |
+| `button` | 8     | All buttons                             |
+| `input`  | 8     | All text inputs                         |
+| `badge`  | 999   | Language badge — fully round pill shape |
 
 ---
 
@@ -324,7 +326,7 @@ The global state of the app. Any screen can read from it and write to it. When s
 
 ### Why Zustand Instead of useState
 
-`useState` is destroyed when you navigate away from a screen. If you put `scans` in `useState` inside the History screen, they disappear the moment you navigate to Camera. 
+`useState` is destroyed when you navigate away from a screen. If you put `scans` in `useState` inside the History screen, they disappear the moment you navigate to Camera.
 
 The Zustand store lives for the entire app session. Navigate anywhere, the data is still there.
 
@@ -346,8 +348,7 @@ Imagine a whiteboard in the hallway between all your rooms (screens). Every room
 **`addScan`**
 
 ```ts
-addScan: (scan) =>
-  set((state) => ({ scans: [scan, ...state.scans] }))
+addScan: (scan) => set((state) => ({ scans: [scan, ...state.scans] }));
 ```
 
 The new scan goes at the front of the array (`[scan, ...state.scans]`). This means newest scans appear at the top of the history list. `...state.scans` spreads all existing scans after it.
@@ -358,7 +359,7 @@ Important: we never do `state.scans.push(scan)`. That mutates the existing array
 
 ```ts
 deleteScan: (id) =>
-  set((state) => ({ scans: state.scans.filter((s) => s.id !== id) }))
+  set((state) => ({ scans: state.scans.filter((s) => s.id !== id) }));
 ```
 
 `filter` creates a new array containing every scan EXCEPT the one with the matching id. The deleted scan is simply not included in the new array.
@@ -367,8 +368,8 @@ deleteScan: (id) =>
 
 ```ts
 scans: state.scans.map((s) =>
-  s.id === id ? { ...s, editedText: newText } : s
-)
+  s.id === id ? { ...s, editedText: newText } : s,
+);
 ```
 
 `map` goes through every scan. If the id matches, return a new object with the updated `editedText`. If it does not match, return the scan unchanged. This creates a new array with one scan updated.

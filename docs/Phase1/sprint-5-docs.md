@@ -1,4 +1,5 @@
 # Sprint 5 — Documentation
+
 ## Files: firebase.service.ts · useFirebase.ts · history.tsx (updated) · results.tsx (updated)
 
 ---
@@ -25,14 +26,14 @@ If you remove `await`, the next line runs before the previous one finishes — t
 
 ### `serverTimestamp()`
 
-Instead of using `new Date().toISOString()` for the creation time, Firebase provides `serverTimestamp()`. 
+Instead of using `new Date().toISOString()` for the creation time, Firebase provides `serverTimestamp()`.
 
 ```ts
 // Client timestamp — your phone's clock
-createdAt: new Date().toISOString()
+createdAt: new Date().toISOString();
 
 // Server timestamp — Firebase server's clock
-createdAt: serverTimestamp()
+createdAt: serverTimestamp();
 ```
 
 Why does this matter? If a user's phone clock is wrong — set to the wrong time zone or just incorrect — your dates would be wrong. `serverTimestamp()` uses Firebase's server clock which is always correct. All users get consistent timestamps.
@@ -45,11 +46,11 @@ Firestore does not automatically sort your data. You have to tell it how to sort
 
 ```ts
 const q = query(
-  collection(db, 'users', userId, 'scans'),
-  orderBy('createdAt', 'desc')  // newest first
-)
+  collection(db, "users", userId, "scans"),
+  orderBy("createdAt", "desc"), // newest first
+);
 
-const snapshot = await getDocs(q)
+const snapshot = await getDocs(q);
 ```
 
 `query()` builds the query. `orderBy('createdAt', 'desc')` sorts by creation time, newest first. Without `orderBy`, Firestore returns documents in an undefined order.
@@ -64,7 +65,7 @@ Firestore returns a `QuerySnapshot` — not a plain array. You access the docume
 const scans: Scan[] = snapshot.docs.map((document) => ({
   ...(document.data() as Scan),
   id: document.id,
-}))
+}));
 ```
 
 - `document.data()` — returns the document fields as a plain object
@@ -79,7 +80,7 @@ const scans: Scan[] = snapshot.docs.map((document) => ({
 When two imports have the same name from different packages, you rename one:
 
 ```ts
-import { ref as storageRef } from 'firebase/storage'
+import { ref as storageRef } from "firebase/storage";
 // Now use storageRef() instead of ref() for storage operations
 ```
 
@@ -140,9 +141,9 @@ Firebase must be initialized exactly once. If you called `initializeApp()` in ev
 By initializing in one file and exporting the results:
 
 ```ts
-export const auth = getAuth(app)
-export const db = getFirestore(app)
-export const storage = getStorage(app)
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 ```
 
 Every other file imports these pre-initialized objects — Firebase is never initialized twice.
@@ -151,8 +152,8 @@ Every other file imports these pre-initialized objects — Firebase is never ini
 
 ```ts
 export async function signInAnon(): Promise<string> {
-  const userCredential = await signInAnonymously(auth)
-  return userCredential.user.uid
+  const userCredential = await signInAnonymously(auth);
+  return userCredential.user.uid;
 }
 ```
 
@@ -220,9 +221,9 @@ Without Storage, the image URL would be a local file path (`file:///var/...`) th
 
 ```ts
 fetchedScans.forEach((scan) => {
-  const exists = scans.find((s) => s.id === scan.id)
-  if (!exists) addScan(scan)
-})
+  const exists = scans.find((s) => s.id === scan.id);
+  if (!exists) addScan(scan);
+});
 ```
 
 Before adding each fetched scan to the store, we check if it already exists. Without this check, every pull-to-refresh would duplicate all scans in the local store.
@@ -230,16 +231,17 @@ Before adding each fetched scan to the store, we check if it already exists. Wit
 ### `removeScan` — deleting from both places
 
 ```ts
-await deleteDoc(doc(db, 'users', userId, 'scans', scan.id))
+await deleteDoc(doc(db, "users", userId, "scans", scan.id));
 
 if (scan.imageUrl) {
-  await deleteObject(imageRef)
+  await deleteObject(imageRef);
 }
 
-deleteScan(scan.id)
+deleteScan(scan.id);
 ```
 
 Three steps in order:
+
 1. Delete the Firestore document
 2. Delete the Storage image (only if it was uploaded — `imageUrl` exists)
 3. Remove from local Zustand store
@@ -248,13 +250,13 @@ Order matters — always confirm Firebase deletion before removing from local st
 
 ### `uploadProgress` states
 
-| Progress | What just happened |
-|---|---|
-| 0 | Starting |
-| 0.3 | Image blob ready |
-| 0.6 | Image uploaded to Storage |
-| 0.8 | Download URL retrieved |
-| 1.0 | Firestore document saved |
+| Progress | What just happened        |
+| -------- | ------------------------- |
+| 0        | Starting                  |
+| 0.3      | Image blob ready          |
+| 0.6      | Image uploaded to Storage |
+| 0.8      | Download URL retrieved    |
+| 1.0      | Firestore document saved  |
 
 The Save button in results.tsx reads this and shows `Saving... 60%` etc.
 
@@ -277,6 +279,7 @@ src/hooks/useFirebase.ts
 ### What Changed
 
 The History screen now:
+
 - Fetches scans from Firebase on mount (`useEffect`)
 - Supports pull-to-refresh (`RefreshControl`)
 - Shows a sync status badge (⏳ Not saved) for unsynced scans
@@ -287,8 +290,8 @@ The History screen now:
 
 ```ts
 useEffect(() => {
-  fetchScans()
-}, [])
+  fetchScans();
+}, []);
 ```
 
 Runs once when the screen first mounts. Fetches all scans from Firestore and adds any new ones to the local store. The FlatList then reads from the store and renders them.
@@ -333,6 +336,7 @@ If Firebase fails — network error, permission denied, etc. — the error messa
 ### What Changed
 
 The Save button now:
+
 - Calls `saveScan()` from `useFirebase` instead of just `addScan()`
 - Shows upload progress percentage while saving
 - Disables itself during upload to prevent double-saves
@@ -352,9 +356,9 @@ async function handleSave() {
 ### Progress button
 
 ```ts
-{isUploading
-  ? `Saving... ${Math.round(uploadProgress * 100)}%`
-  : '💾  Save'}
+{
+  isUploading ? `Saving... ${Math.round(uploadProgress * 100)}%` : "💾  Save";
+}
 ```
 
 While uploading, the button label changes to show progress. `Math.round(0.6 * 100)` = `60`. So the user sees "Saving... 60%". This prevents the user from wondering if the app froze.
