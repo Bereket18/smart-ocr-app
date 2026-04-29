@@ -12,6 +12,7 @@ import { Scan } from "@/types/index";
 import { generateId } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation, LANGUAGES } from "@/hooks/useTranslation";
 import {
   ActivityIndicator,
   Alert,
@@ -39,6 +40,16 @@ export default function ResultsScreen() {
   } = useAI();
   const savedText = useRef("");
   const [showExport, setShowExport] = useState(false);
+
+  const {
+    translation,
+    isLoading: translateLoading,
+    error: translateError,
+    translate,
+    clearTranslation,
+  } = useTranslation();
+
+  const [showLanguages, setShowLanguages] = useState(false);
 
   useEffect(() => {
     if (imageUri) {
@@ -184,6 +195,16 @@ export default function ResultsScreen() {
 
             <TouchableOpacity
               style={styles.iconButton}
+              onPress={() => setShowLanguages(true)}
+              disabled={translateLoading}
+            >
+              <Text style={styles.iconButtonText}>
+                {translateLoading ? "..." : "🌐"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconButton}
               onPress={() => setShowExport(true)}
               disabled={isExporting}
             >
@@ -222,6 +243,26 @@ export default function ResultsScreen() {
           error={aiError}
           onDismiss={clearSummary}
         />
+
+        {(translation || translateLoading || translateError) && (
+          <View style={styles.translationCard}>
+            <View style={styles.translationHeader}>
+              <Text style={styles.translationTitle}>🌐 Translation</Text>
+              <TouchableOpacity onPress={clearTranslation}>
+                <Text style={styles.dismissText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {translateLoading && (
+              <ActivityIndicator color={Theme.accent} size="small" />
+            )}
+            {translateError && (
+              <Text style={styles.translateError}>⚠️ {translateError}</Text>
+            )}
+            {translation && (
+              <Text style={styles.translationText}>{translation}</Text>
+            )}
+          </View>
+        )}
         {renderContent()}
       </ScrollView>
 
@@ -230,6 +271,16 @@ export default function ResultsScreen() {
         visible={showExport}
         onClose={() => setShowExport(false)}
         options={exportOptions}
+      />
+      <BottomSheet
+        visible={showLanguages}
+        onClose={() => setShowLanguages(false)}
+        options={LANGUAGES.map((lang) => ({
+          icon: "🌐",
+          label: lang.label,
+          description: `Translate to ${lang.label}`,
+          onPress: () => translate(getCurrentText(), lang.code),
+        }))}
       />
     </KeyboardAvoidingView>
   );
@@ -351,5 +402,38 @@ const styles = StyleSheet.create({
     color: Theme.background,
     fontSize: FontSize.body,
     fontWeight: "bold",
+  },
+  translationCard: {
+    backgroundColor: Theme.surface,
+    borderRadius: Radius.card,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Theme.accent,
+  },
+  translationHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  translationTitle: {
+    fontSize: FontSize.h2,
+    fontWeight: "bold",
+    color: Theme.accent,
+  },
+  dismissText: {
+    color: Theme.textSecondary,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  translationText: {
+    fontSize: FontSize.body,
+    color: Theme.textPrimary,
+    lineHeight: 24,
+  },
+  translateError: {
+    fontSize: FontSize.body,
+    color: Theme.error,
   },
 });
