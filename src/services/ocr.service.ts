@@ -56,10 +56,15 @@ async function recognizeWithGoogleVision(imageUri: string): Promise<OCRResult> {
   const language =
     pages[0]?.property?.detectedLanguages?.[0]?.languageCode ?? 'und'
 
-  return {
-    text: annotation.text.trim(),
-    language,
-  }
+  const cleanedText = annotation.text
+  .replace(/([a-z,])\n([a-z])/g, '$1 $2')
+  .replace(/([a-zA-Z])-\n([a-zA-Z])/g, '$1$2')
+  .trim()
+
+return {
+  text: cleanedText,
+  language,
+}
 }
 
 async function recognizeWithMLKit(imageUri: string): Promise<OCRResult> {
