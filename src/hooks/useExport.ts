@@ -7,7 +7,13 @@ export function useExport() {
   const [isExporting, setIsExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function exportAsTXT(text: string, filename?: string): Promise<void> {
+  function getTempPath(extension: string): string {
+    const fileSystem = FileSystem as any
+    const directory = fileSystem.cacheDirectory ?? fileSystem.documentDirectory ?? ''
+    return `${directory}scan_${Date.now()}.${extension}`
+  }
+
+  async function exportAsTXT(text: string): Promise<void> {
     try {
       setIsExporting(true)
       setError(null)
@@ -18,11 +24,10 @@ export function useExport() {
         return
       }
 
-      const name = filename ?? `scan_${Date.now()}`
-      const path = FileSystem.documentDirectory + `${name}.txt`
+      const path = getTempPath('txt')
 
       await FileSystem.writeAsStringAsync(path, text, {
-        encoding: FileSystem.EncodingType.UTF8,
+        encoding: 'utf8' as any,
       })
 
       await Sharing.shareAsync(path, {
@@ -37,7 +42,7 @@ export function useExport() {
     }
   }
 
-  async function exportAsPDF(text: string, filename?: string): Promise<void> {
+  async function exportAsPDF(text: string): Promise<void> {
     try {
       setIsExporting(true)
       setError(null)
@@ -52,24 +57,12 @@ export function useExport() {
         <html>
           <head>
             <style>
-              body {
-                font-family: Arial, sans-serif;
-                font-size: 16px;
-                line-height: 1.6;
-                padding: 40px;
-                color: #1a1a1a;
-              }
-              h1 {
-                font-size: 20px;
-                color: #0891B2;
-                border-bottom: 2px solid #0891B2;
-                padding-bottom: 8px;
-                margin-bottom: 24px;
-              }
-              p {
-                white-space: pre-wrap;
-                word-wrap: break-word;
-              }
+              body { font-family: Arial, sans-serif; font-size: 16px;
+                     line-height: 1.6; padding: 40px; color: #1a1a1a; }
+              h1 { font-size: 20px; color: #0891B2;
+                   border-bottom: 2px solid #0891B2;
+                   padding-bottom: 8px; margin-bottom: 24px; }
+              p { white-space: pre-wrap; word-wrap: break-word; }
             </style>
           </head>
           <body>
@@ -104,10 +97,10 @@ export function useExport() {
         return
       }
 
-      const path = FileSystem.documentDirectory + `share_${Date.now()}.txt`
+      const path = getTempPath('txt')
 
       await FileSystem.writeAsStringAsync(path, text, {
-        encoding: FileSystem.EncodingType.UTF8,
+        encoding: 'utf8' as any,
       })
 
       await Sharing.shareAsync(path, {
