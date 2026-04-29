@@ -1,8 +1,14 @@
 import { useEffect, useRef } from 'react'
 import {
-  View, Text, TouchableOpacity, StyleSheet,
-  Modal, Animated, TouchableWithoutFeedback,
-} from 'react-native'
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Animated,
+  TouchableWithoutFeedback,
+  ScrollView,
+} from "react-native";
 import { Theme } from '@/constants/colors'
 import { FontSize, Spacing, Radius } from '@/constants/typography'
 
@@ -50,35 +56,35 @@ export function BottomSheet({ visible, onClose, options }: Props) {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <Animated.View
-              style={[
-                styles.sheet,
-                { transform: [{ translateY: slideAnim }] },
-              ]}
+              style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
             >
               <View style={styles.handle} />
 
               <Text style={styles.title}>Export Scan</Text>
-
-              {options.map((option) => (
-                <TouchableOpacity
-                  key={option.label}
-                  style={styles.option}
-                  onPress={() => {
-                    onClose()
-                    setTimeout(option.onPress, 300)
-                  }}
-                >
-                  <Text style={styles.optionIcon}>{option.icon}</Text>
-                  <View style={styles.optionContent}>
-                    <Text style={styles.optionLabel}>{option.label}</Text>
-                    <Text style={styles.optionDescription}>
-                      {option.description}
-                    </Text>
-                  </View>
-                  <Text style={styles.optionArrow}>›</Text>
-                </TouchableOpacity>
-              ))}
-
+              <ScrollView
+                style={{ maxHeight: 350 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {options.map((option) => (
+                  <TouchableOpacity
+                    key={option.label}
+                    style={styles.option}
+                    onPress={() => {
+                      onClose();
+                      setTimeout(option.onPress, 300);
+                    }}
+                  >
+                    <Text style={styles.optionIcon}>{option.icon}</Text>
+                    <View style={styles.optionContent}>
+                      <Text style={styles.optionLabel}>{option.label}</Text>
+                      <Text style={styles.optionDescription}>
+                        {option.description}
+                      </Text>
+                    </View>
+                    <Text style={styles.optionArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -87,7 +93,7 @@ export function BottomSheet({ visible, onClose, options }: Props) {
         </View>
       </TouchableWithoutFeedback>
     </Modal>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
