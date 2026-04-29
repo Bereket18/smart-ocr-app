@@ -1,26 +1,32 @@
-import { useEffect, useRef } from 'react'
+import { Theme } from "@/constants/colors";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
+import { useEffect, useRef } from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet,
-  Modal, Animated, TouchableWithoutFeedback,
-} from 'react-native'
-import { Theme } from '@/constants/colors'
-import { FontSize, Spacing, Radius } from '@/constants/typography'
+  Animated,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 
 interface ExportOption {
-  icon: string
-  label: string
-  description: string
-  onPress: () => void
+  icon: string;
+  label: string;
+  description: string;
+  onPress: () => void;
 }
 
 interface Props {
-  visible: boolean
-  onClose: () => void
-  options: ExportOption[]
+  visible: boolean;
+  onClose: () => void;
+  options: ExportOption[];
 }
 
 export function BottomSheet({ visible, onClose, options }: Props) {
-  const slideAnim = useRef(new Animated.Value(300)).current
+  const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
     if (visible) {
@@ -29,15 +35,15 @@ export function BottomSheet({ visible, onClose, options }: Props) {
         useNativeDriver: true,
         tension: 100,
         friction: 12,
-      }).start()
+      }).start();
     } else {
       Animated.timing(slideAnim, {
         toValue: 300,
         duration: 200,
         useNativeDriver: true,
-      }).start()
+      }).start();
     }
-  }, [visible])
+  }, [visible]);
 
   return (
     <Modal
@@ -50,35 +56,35 @@ export function BottomSheet({ visible, onClose, options }: Props) {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <Animated.View
-              style={[
-                styles.sheet,
-                { transform: [{ translateY: slideAnim }] },
-              ]}
+              style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
             >
               <View style={styles.handle} />
 
               <Text style={styles.title}>Export Scan</Text>
-
-              {options.map((option) => (
-                <TouchableOpacity
-                  key={option.label}
-                  style={styles.option}
-                  onPress={() => {
-                    onClose()
-                    setTimeout(option.onPress, 300)
-                  }}
-                >
-                  <Text style={styles.optionIcon}>{option.icon}</Text>
-                  <View style={styles.optionContent}>
-                    <Text style={styles.optionLabel}>{option.label}</Text>
-                    <Text style={styles.optionDescription}>
-                      {option.description}
-                    </Text>
-                  </View>
-                  <Text style={styles.optionArrow}>›</Text>
-                </TouchableOpacity>
-              ))}
-
+              <ScrollView
+                style={{ maxHeight: 350 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {options.map((option) => (
+                  <TouchableOpacity
+                    key={option.label}
+                    style={styles.option}
+                    onPress={() => {
+                      onClose();
+                      setTimeout(option.onPress, 300);
+                    }}
+                  >
+                    <Text style={styles.optionIcon}>{option.icon}</Text>
+                    <View style={styles.optionContent}>
+                      <Text style={styles.optionLabel}>{option.label}</Text>
+                      <Text style={styles.optionDescription}>
+                        {option.description}
+                      </Text>
+                    </View>
+                    <Text style={styles.optionArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -87,14 +93,14 @@ export function BottomSheet({ visible, onClose, options }: Props) {
         </View>
       </TouchableWithoutFeedback>
     </Modal>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   sheet: {
     backgroundColor: Theme.surface,
@@ -108,19 +114,19 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: Theme.border,
     borderRadius: 2,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: Spacing.lg,
   },
   title: {
     fontSize: FontSize.h2,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: Theme.textPrimary,
     marginBottom: Spacing.lg,
-    textAlign: 'center',
+    textAlign: "center",
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Theme.background,
     borderRadius: Radius.card,
     padding: Spacing.lg,
@@ -137,7 +143,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: FontSize.body,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Theme.textPrimary,
     marginBottom: 2,
   },
@@ -153,11 +159,11 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: Spacing.sm,
     padding: Spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelText: {
     fontSize: FontSize.body,
     color: Theme.error,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-})
+});
