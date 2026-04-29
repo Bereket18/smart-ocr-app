@@ -1,19 +1,19 @@
+import { Theme } from "@/constants/colors";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
+import { useFirebase } from "@/hooks/useFirebase";
+import { useScanStore } from "@/store/scanStore";
+import { Scan } from "@/types";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
   Alert,
+  FlatList,
   RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { router } from "expo-router";
-import { Theme } from "@/constants/colors";
-import { FontSize, Spacing, Radius } from "@/constants/typography";
-import { useScanStore } from "@/store/scanStore";
-import { useFirebase } from "@/hooks/useFirebase";
-import { Scan } from "@/types";
 
 export default function HistoryScreen() {
   const { scans, setActiveScan } = useScanStore();
@@ -21,7 +21,10 @@ export default function HistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchScans();
+    const timer = setTimeout(() => {
+      fetchScans();
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   async function handleRefresh() {
