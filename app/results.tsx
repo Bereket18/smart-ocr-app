@@ -1,16 +1,22 @@
+import { AISummaryCard } from "@/components/AISummaryCard";
+import { BottomSheet } from "@/components/BottomSheet";
 import { TextEditor } from "@/components/TextEditor";
 import { Theme } from "@/constants/colors";
 import { FontSize, Radius, Spacing } from "@/constants/typography";
+import { useAI } from "@/hooks/useAI";
+import { useExport } from "@/hooks/useExport";
 import { useFirebase } from "@/hooks/useFirebase";
 import { useOCR } from "@/hooks/useOCR";
 import { useScanStore } from "@/store/scanStore";
-import { Scan } from "@/types";
+import { Scan } from "@/types/index";
 import { generateId } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,17 +24,20 @@ import {
   View,
 } from "react-native";
 
-import { useExport } from "@/hooks/useExport";
-import { BottomSheet } from "@/components/BottomSheet";
-
 export default function ResultsScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
   const { activeScan } = useScanStore();
   const { status, text, language, error, processImage, reset } = useOCR();
-  const { addScan } = useScanStore();
   const { saveScan, isUploading, uploadProgress } = useFirebase();
-  const savedText = useRef("");
   const { exportAsTXT, exportAsPDF, shareText, isExporting } = useExport();
+  const {
+    summary,
+    isLoading: aiLoading,
+    error: aiError,
+    summarize,
+    clearSummary,
+  } = useAI();
+  const savedText = useRef("");
   const [showExport, setShowExport] = useState(false);
 
   useEffect(() => {
@@ -39,10 +48,12 @@ export default function ResultsScreen() {
     }
   }, [imageUri]);
 
-  async function handleSave() {
-    const currentText =
-      savedText.current || text || activeScan?.editedText || "";
+  function getCurrentText(): string {
+    return savedText.current || text || activeScan?.editedText || "";
+  }
 
+  async function handleSave() {
+    const currentText = getCurrentText();
     if (!currentText.trim()) return;
 
     const newScan: Scan = {
@@ -62,11 +73,33 @@ export default function ResultsScreen() {
     };
 
     await saveScan(newScan);
-
     Alert.alert("Saved", "Scan saved to history", [
       { text: "OK", onPress: () => router.push("/history") },
     ]);
   }
+
+  const exportOptions = [
+    {
+      icon: "📄",
+      label: "Export as TXT",
+      description: "Plain text file you can open anywhere",
+      onPress: () => exportAsTXT(getCurrentText()),
+    },
+    {
+      icon: "📋",
+      label: "Export as PDF",
+      description: "Formatted PDF document",
+      onPress: () => exportAsPDF(getCurrentText()),
+    },
+    {
+      icon: "📤",
+      label: "Share Text",
+      description: "Share via any app on your phone",
+      onPress: () => shareText(getCurrentText()),
+    },
+  ];
+
+  const hasContent = status === "success" || !!activeScan;
 
   function renderContent() {
     if (status === "processing") {
@@ -119,44 +152,46 @@ export default function ResultsScreen() {
     );
   }
 
-  const exportOptions = [
-    {
-      icon: "📄",
-      label: "Export as TXT",
-      description: "Plain text file you can open anywhere",
-      onPress: () =>
-        exportAsTXT(savedText.current || text || activeScan?.editedText || ""),
-    },
-    {
-      icon: "📋",
-      label: "Export as PDF",
-      description: "Formatted PDF document",
-      onPress: () =>
-        exportAsPDF(savedText.current || text || activeScan?.editedText || ""),
-    },
-    {
-      icon: "📤",
-      label: "Share Text",
-      description: "Share via any app on your phone",
-      onPress: () =>
-        shareText(savedText.current || text || activeScan?.editedText || ""),
-    },
-  ];
-
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={90}
+    >
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <View style={styles.headerMeta}>
-          {/* Language Badge */}
-          {language || activeScan?.language ? (
+        {/* Left — Language Badge */}
+        <View style={styles.headerLeft}>
+          {(language || activeScan?.language) && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
                 {(language || activeScan?.language || "und").toUpperCase()}
               </Text>
             </View>
-          ) : null}
+          )}
+        </View>
 
-          {(status === "success" || activeScan) && (
+        {/* Right — Action Buttons */}
+        {hasContent && (
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.aiButton}
+              onPress={() => summarize(getCurrentText())}
+              disabled={aiLoading}
+            >
+              <Text style={styles.aiButtonText}>✨ AI</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowExport(true)}
+              disabled={isExporting}
+            >
+              <Text style={styles.iconButtonText}>
+                {isExporting ? "..." : "📤"}
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[
                 styles.saveButton,
@@ -167,71 +202,36 @@ export default function ResultsScreen() {
             >
               <Text style={styles.saveButtonText}>
                 {isUploading
-                  ? `Saving... ${Math.round(uploadProgress * 100)}%`
-                  : "💾  Save"}
+                  ? `${Math.round(uploadProgress * 100)}%`
+                  : "💾 Save"}
               </Text>
             </TouchableOpacity>
-          )}
-
-          <View style={styles.header}>
-            <View style={styles.headerMeta}>
-              {language || activeScan?.language ? (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {(language || activeScan?.language || "und").toUpperCase()}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-
-            <View style={styles.headerButtons}>
-              {(status === "success" || activeScan) && (
-                <TouchableOpacity
-                  style={styles.exportButton}
-                  onPress={() => setShowExport(true)}
-                  disabled={isExporting}
-                >
-                  <Text style={styles.exportButtonText}>
-                    {isExporting ? "..." : "📤"}
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {(status === "success" || activeScan) && (
-                <TouchableOpacity
-                  style={[
-                    styles.saveButton,
-                    isUploading && styles.saveButtonDisabled,
-                  ]}
-                  onPress={handleSave}
-                  disabled={isUploading}
-                >
-                  <Text style={styles.saveButtonText}>
-                    {isUploading
-                      ? `${Math.round(uploadProgress * 100)}%`
-                      : "💾  Save"}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
           </View>
-        </View>
+        )}
       </View>
 
+      {/* ── Content ── */}
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
       >
+        <AISummaryCard
+          summary={summary}
+          isLoading={aiLoading}
+          error={aiError}
+          onDismiss={clearSummary}
+        />
         {renderContent()}
       </ScrollView>
 
+      {/* ── Export Sheet ── */}
       <BottomSheet
         visible={showExport}
         onClose={() => setShowExport(false)}
         options={exportOptions}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -249,7 +249,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.border,
   },
-  headerMeta: {
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
@@ -265,15 +269,38 @@ const styles = StyleSheet.create({
     fontSize: FontSize.badge,
     fontWeight: "bold",
   },
-  metaText: {
-    fontSize: FontSize.caption,
-    color: Theme.textSecondary,
+  aiButton: {
+    backgroundColor: "#2D1B4E",
+    borderRadius: Radius.button,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Theme.aiPurple,
+  },
+  aiButtonText: {
+    color: Theme.aiPurple,
+    fontSize: FontSize.body,
+    fontWeight: "600",
+  },
+  iconButton: {
+    backgroundColor: Theme.surface,
+    borderRadius: Radius.button,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Theme.border,
+  },
+  iconButtonText: {
+    fontSize: 18,
   },
   saveButton: {
     backgroundColor: Theme.accent,
     borderRadius: Radius.button,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
+  },
+  saveButtonDisabled: {
+    backgroundColor: Theme.border,
   },
   saveButtonText: {
     color: Theme.background,
@@ -324,24 +351,5 @@ const styles = StyleSheet.create({
     color: Theme.background,
     fontSize: FontSize.body,
     fontWeight: "bold",
-  },
-  saveButtonDisabled: {
-    backgroundColor: Theme.border,
-  },
-  headerButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  exportButton: {
-    backgroundColor: Theme.surface,
-    borderRadius: Radius.button,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.border,
-  },
-  exportButtonText: {
-    fontSize: 18,
   },
 });
