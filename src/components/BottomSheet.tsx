@@ -11,7 +11,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-
 interface ExportOption {
   icon: string;
   label: string;
