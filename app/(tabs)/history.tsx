@@ -14,11 +14,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { saveToLocalDB } from "@/hooks/useOfflineSync";
 
 export default function HistoryScreen() {
   const { scans, setActiveScan } = useScanStore();
   const { fetchScans, removeScan, error } = useFirebase();
   const [refreshing, setRefreshing] = useState(false);
+  const { isOnline } = useOfflineSync();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,6 +97,13 @@ export default function HistoryScreen() {
 
   return (
     <View style={styles.container}>
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>
+            ● Offline — scans will sync when connected
+          </Text>
+        </View>
+      )}
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>⚠️ {error}</Text>
@@ -203,5 +213,15 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     fontSize: 18,
+  },
+  offlineBanner: {
+    backgroundColor: Theme.warning,
+    padding: Spacing.sm,
+    alignItems: "center",
+  },
+  offlineText: {
+    color: Theme.background,
+    fontSize: FontSize.caption,
+    fontWeight: "bold",
   },
 });
