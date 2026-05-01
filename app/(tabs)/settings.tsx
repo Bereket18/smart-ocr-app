@@ -7,15 +7,28 @@ import {
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { Theme } from "@/constants/colors";
 import { FontSize, Spacing, Radius } from "@/constants/typography";
 import { useScanStore } from "@/store/scanStore";
-import { logoutUser } from "@/services/firebase.service";
+import { logoutUser, auth } from "@/services/firebase.service";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
-import { auth } from "@/services/firebase.service";
+import { useTheme } from "@/hooks/useTheme";
+import { ThemeType } from "@/constants/colors";
 
-function SectionHeader({ title }: { title: string }) {
-  return <Text style={styles.sectionHeader}>{title}</Text>;
+function SectionHeader({ title, Theme }: { title: string; Theme: ThemeType }) {
+  return (
+    <Text
+      style={{
+        fontSize: FontSize.badge,
+        fontWeight: "bold",
+        color: Theme.accent,
+        letterSpacing: 1,
+        marginTop: Spacing.xl,
+        marginBottom: Spacing.sm,
+      }}
+    >
+      {title}
+    </Text>
+  );
 }
 
 function SettingsRow({
@@ -23,24 +36,50 @@ function SettingsRow({
   value,
   onPress,
   danger,
+  Theme,
 }: {
   label: string;
   value?: string;
   onPress?: () => void;
   danger?: boolean;
+  Theme: ThemeType;
 }) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} disabled={!onPress}>
-      <Text style={[styles.rowLabel, danger && styles.rowLabelDanger]}>
+    <TouchableOpacity
+      style={{
+        backgroundColor: Theme.surface,
+        borderRadius: Radius.card,
+        padding: Spacing.lg,
+        marginBottom: 2,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: Theme.border,
+      }}
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <Text
+        style={{
+          fontSize: FontSize.body,
+          color: danger ? Theme.error : Theme.textPrimary,
+        }}
+      >
         {label}
       </Text>
-      {value && <Text style={styles.rowValue}>{value}</Text>}
+      {value && (
+        <Text style={{ fontSize: FontSize.body, color: Theme.textSecondary }}>
+          {value}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
 
 export default function SettingsScreen() {
-  const { clearAllScans, scans } = useScanStore();
+  const Theme = useTheme();
+  const { clearAllScans, scans, themeMode, setThemeMode } = useScanStore();
   const { isOnline, pendingCount } = useOfflineSync();
 
   async function handleLogout() {
@@ -60,7 +99,7 @@ export default function SettingsScreen() {
   function handleClearHistory() {
     Alert.alert(
       "Clear All History",
-      `This will permanently delete all ${scans.length} scans. This cannot be undone.`,
+      `This will permanently delete all ${scans.length} scans.`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -73,138 +112,159 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <SectionHeader title="STATUS" />
-      <View style={styles.statusCard}>
-        <View style={styles.statusRow}>
-          <Text style={styles.statusLabel}>Connection</Text>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: Theme.background }}
+      contentContainerStyle={{ padding: Spacing.lg }}
+    >
+      <SectionHeader title="STATUS" Theme={Theme} />
+      <View
+        style={{
+          backgroundColor: Theme.surface,
+          borderRadius: Radius.card,
+          padding: Spacing.lg,
+          borderWidth: 1,
+          borderColor: Theme.border,
+          gap: Spacing.sm,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ fontSize: FontSize.body, color: Theme.textSecondary }}>
+            Connection
+          </Text>
           <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: isOnline ? Theme.success : Theme.error },
-            ]}
+            style={{
+              borderRadius: Radius.badge,
+              paddingHorizontal: Spacing.sm,
+              paddingVertical: 2,
+              backgroundColor: isOnline ? Theme.success : Theme.error,
+            }}
           >
-            <Text style={styles.statusBadgeText}>
+            <Text
+              style={{
+                fontSize: FontSize.badge,
+                fontWeight: "bold",
+                color: "#FFFFFF",
+              }}
+            >
               {isOnline ? "● Online" : "● Offline"}
             </Text>
           </View>
         </View>
+
         {pendingCount > 0 && (
-          <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Pending sync</Text>
-            <Text style={styles.statusValue}>{pendingCount} scans</Text>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text
+              style={{ fontSize: FontSize.body, color: Theme.textSecondary }}
+            >
+              Pending sync
+            </Text>
+            <Text style={{ fontSize: FontSize.body, color: Theme.textPrimary }}>
+              {pendingCount} scans
+            </Text>
           </View>
         )}
-        <View style={styles.statusRow}>
-          <Text style={styles.statusLabel}>Total scans</Text>
-          <Text style={styles.statusValue}>{scans.length}</Text>
+
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontSize: FontSize.body, color: Theme.textSecondary }}>
+            Total scans
+          </Text>
+          <Text style={{ fontSize: FontSize.body, color: Theme.textPrimary }}>
+            {scans.length}
+          </Text>
         </View>
-        <View style={styles.statusRow}>
-          <Text style={styles.statusLabel}>Account</Text>
-          <Text style={styles.statusValue} numberOfLines={1}>
+
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontSize: FontSize.body, color: Theme.textSecondary }}>
+            Account
+          </Text>
+          <Text
+            style={{ fontSize: FontSize.body, color: Theme.textPrimary }}
+            numberOfLines={1}
+          >
             {auth.currentUser?.email ?? "Not signed in"}
           </Text>
         </View>
       </View>
 
-      <SectionHeader title="APPEARANCE" />
-      <SettingsRow label="Dark Mode" value="On" />
+      <SectionHeader title="APPEARANCE" Theme={Theme} />
+      <View
+        style={{
+          backgroundColor: Theme.surface,
+          borderRadius: Radius.card,
+          padding: Spacing.lg,
+          borderWidth: 1,
+          borderColor: Theme.border,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontSize: FontSize.body, color: Theme.textPrimary }}>
+          Dark Mode
+        </Text>
+        <TouchableOpacity
+          style={{
+            width: 48,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: themeMode === "dark" ? Theme.accent : Theme.border,
+            justifyContent: "center",
+            padding: 2,
+          }}
+          onPress={() => setThemeMode(themeMode === "dark" ? "light" : "dark")}
+        >
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: "#FFFFFF",
+              alignSelf: themeMode === "dark" ? "flex-end" : "flex-start",
+            }}
+          />
+        </TouchableOpacity>
+      </View>
 
-      <SectionHeader title="OCR LANGUAGE" />
-      <SettingsRow label="Language" value="Auto Detect" />
+      <SectionHeader title="OCR LANGUAGE" Theme={Theme} />
+      <SettingsRow label="Language" value="Auto Detect" Theme={Theme} />
 
-      <SectionHeader title="EXPORT" />
-      <SettingsRow label="Default Format" value="TXT" />
+      <SectionHeader title="EXPORT" Theme={Theme} />
+      <SettingsRow label="Default Format" value="TXT" Theme={Theme} />
 
-      <SectionHeader title="ACCOUNT" />
-      <SettingsRow label="Sign Out" onPress={handleLogout} danger />
+      <SectionHeader title="ACCOUNT" Theme={Theme} />
+      <SettingsRow
+        label="Sign Out"
+        onPress={handleLogout}
+        danger
+        Theme={Theme}
+      />
 
-      <SectionHeader title="DANGER ZONE" />
+      <SectionHeader title="DANGER ZONE" Theme={Theme} />
       <SettingsRow
         label="Clear All History"
         onPress={handleClearHistory}
         danger
+        Theme={Theme}
       />
 
-      <Text style={styles.version}>v1.0.0 · Smart OCR</Text>
+      <Text
+        style={{
+          fontSize: FontSize.caption,
+          color: Theme.textSecondary,
+          textAlign: "center",
+          marginTop: Spacing.xl3,
+        }}
+      >
+        v1.0.0 · Smart OCR
+      </Text>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.background,
-  },
-  content: {
-    padding: Spacing.lg,
-  },
-  sectionHeader: {
-    fontSize: FontSize.badge,
-    fontWeight: "bold",
-    color: Theme.accent,
-    letterSpacing: 1,
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.sm,
-  },
-  statusCard: {
-    backgroundColor: Theme.surface,
-    borderRadius: Radius.card,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Theme.border,
-    gap: Spacing.sm,
-  },
-  statusRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  statusLabel: {
-    fontSize: FontSize.body,
-    color: Theme.textSecondary,
-  },
-  statusValue: {
-    fontSize: FontSize.body,
-    color: Theme.textPrimary,
-    maxWidth: 200,
-  },
-  statusBadge: {
-    borderRadius: Radius.badge,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-  },
-  statusBadgeText: {
-    fontSize: FontSize.badge,
-    fontWeight: "bold",
-    color: Theme.textPrimary,
-  },
-  row: {
-    backgroundColor: Theme.surface,
-    borderRadius: Radius.card,
-    padding: Spacing.lg,
-    marginBottom: 2,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: Theme.border,
-  },
-  rowLabel: {
-    fontSize: FontSize.body,
-    color: Theme.textPrimary,
-  },
-  rowLabelDanger: {
-    color: Theme.error,
-  },
-  rowValue: {
-    fontSize: FontSize.body,
-    color: Theme.textSecondary,
-  },
-  version: {
-    fontSize: FontSize.caption,
-    color: Theme.textSecondary,
-    textAlign: "center",
-    marginTop: Spacing.xl3,
-  },
-});
