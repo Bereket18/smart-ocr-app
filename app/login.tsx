@@ -13,12 +13,14 @@ import { router } from "expo-router";
 import { Theme } from "@/constants/colors";
 import { FontSize, Spacing, Radius } from "@/constants/typography";
 import { loginUser, registerUser } from "@/services/firebase.service";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
+  const Theme = useTheme();
 
   async function handleSubmit() {
     if (!email.trim() || !password.trim()) {

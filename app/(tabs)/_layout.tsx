@@ -1,6 +1,6 @@
-import { Theme } from "@/constants/colors";
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/hooks/useTheme";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -17,6 +17,8 @@ function TabIcon({
 }
 
 export default function TabLayout() {
+  const Theme = useTheme();
+
   return (
     <Tabs
       screenOptions={{

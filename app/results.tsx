@@ -24,6 +24,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function ResultsScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
@@ -50,6 +51,7 @@ export default function ResultsScreen() {
   } = useTranslation();
 
   const [showLanguages, setShowLanguages] = useState(false);
+  const Theme = useTheme();
 
   useEffect(() => {
     if (imageUri) {

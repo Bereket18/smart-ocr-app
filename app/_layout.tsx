@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator } from "react-native";
-import { Theme } from "@/constants/colors";
+import { Colors } from "@/constants/colors";
 import { auth } from "@/services/firebase.service";
+import { useScanStore } from "@/store/scanStore";
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { themeMode } = useScanStore();
+  const Theme = Colors[themeMode];
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -19,9 +22,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!isReady) return;
-    if (!isLoggedIn) {
-      router.replace("/login");
-    }
+    if (!isLoggedIn) router.replace("/login");
   }, [isReady, isLoggedIn]);
 
   if (!isReady) {
@@ -41,7 +42,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: Theme.background },

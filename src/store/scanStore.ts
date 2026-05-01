@@ -14,6 +14,11 @@ const useScanStore = create<ScanStore>((set, get) => ({
   error: null,
   multiPageSession: initialMultiPageSession,
 
+  themeMode: "dark" as "dark" | "light",
+
+setThemeMode: (mode) =>
+  set({ themeMode: mode }),
+
   setScans: (newScans) => set({ scans: newScans }),
 
   addScan: (scan) =>

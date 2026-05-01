@@ -5,6 +5,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function CameraScreen() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
@@ -14,6 +15,7 @@ export default function CameraScreen() {
   const [torchOn, setTorchOn] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const { pickFromGallery, isLoading } = useImagePicker();
+  const Theme = useTheme();
 
   function handleClose() {
     router.back();
