@@ -52,14 +52,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <TabIcon name="time-outline" color={color} size={size} />
           ),
-          headerRight: () => (
-            <TouchableOpacity
-              style={{ marginRight: Spacing.lg }}
-              onPress={() => {}}
-            >
-              <Text style={{ fontSize: 20 }}>🔍</Text>
-            </TouchableOpacity>
-          ),
         }}
       />
       <Tabs.Screen
