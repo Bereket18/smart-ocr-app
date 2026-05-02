@@ -1,6 +1,8 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useTheme";
+import { Text, TouchableOpacity } from "react-native";
+import { Spacing } from "@/constants/typography";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -49,6 +51,14 @@ export default function TabLayout() {
           tabBarLabel: "History",
           tabBarIcon: ({ color, size }) => (
             <TabIcon name="time-outline" color={color} size={size} />
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              style={{ marginRight: Spacing.lg }}
+              onPress={() => {}}
+            >
+              <Text style={{ fontSize: 20 }}>🔍</Text>
+            </TouchableOpacity>
           ),
         }}
       />
