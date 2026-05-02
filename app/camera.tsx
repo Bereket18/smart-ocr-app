@@ -314,7 +314,7 @@ export default function CameraScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={{
             alignSelf: "center",
             paddingVertical: Spacing.sm,
@@ -336,7 +336,7 @@ export default function CameraScreen() {
           >
             🖼 Choose from Gallery
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );
