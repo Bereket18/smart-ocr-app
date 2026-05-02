@@ -1,7 +1,7 @@
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import * as FileSystem from 'expo-file-system'
+// import * as FileSystem from 'expo-file-system'
 
 interface UseImagePickerReturn {
   pickFromCamera: () => Promise<string | null>;
@@ -11,31 +11,25 @@ interface UseImagePickerReturn {
 }
 
 async function compressImage(uri: string): Promise<string> {
-  const sizes = [
-    { width: 800, compress: 0.4 },
+  const attempts = [
+    { width: 800, compress: 0.5 },
     { width: 600, compress: 0.3 },
-    { width: 500, compress: 0.2 },
-    { width: 400, compress: 0.1 },
+    { width: 400, compress: 0.2 },
   ]
 
-  for (const { width, compress } of sizes) {
+  let lastUri = uri
+
+  for (const { width, compress } of attempts) {
     const result = await ImageManipulator.manipulateAsync(
       uri,
       [{ resize: { width } }],
       { compress, format: ImageManipulator.SaveFormat.JPEG }
     )
-
-    const info = await FileSystem.getInfoAsync(result.uri)
-    const sizeInKB = (info as any).size / 1024
-
-    console.log(`Compressed: ${width}px quality ${compress} → ${Math.round(sizeInKB)}KB`)
-
-    if (sizeInKB < 900) {
-      return result.uri
-    }
+    lastUri = result.uri
+    break
   }
 
-  throw new Error('IMAGE_TOO_LARGE')
+  return lastUri
 }
 
 export function useImagePicker(): UseImagePickerReturn {
@@ -74,36 +68,46 @@ export function useImagePicker(): UseImagePickerReturn {
   }
 
   async function pickFromGallery(): Promise<string | null> {
-    try {
-      setIsLoading(true);
-      setError(null);
+  try {
+    setIsLoading(true)
+    setError(null)
 
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+    console.log('Gallery: requesting permission...')
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    console.log('Gallery: permission status =', status)
 
-      if (status !== "granted") {
-        setError("Gallery permission is required to upload images");
-        return null;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsEditing: false,
-        quality: 1,
-      });
-
-      if (result.canceled) return null;
-
-      const uri = result.assets[0].uri;
-      const compressed = await compressImage(uri);
-      return compressed;
-    } catch (err: any) {
-      setError(err.message ?? "Gallery failed");
-      return null;
-    } finally {
-      setIsLoading(false);
+    if (status !== 'granted') {
+      setError('Gallery permission is required')
+      console.log('Gallery: permission denied')
+      return null
     }
+
+    console.log('Gallery: launching picker...')
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images' as any,
+      allowsEditing: false,
+      quality: 1,
+    })
+
+    console.log('Gallery: result canceled =', result.canceled)
+
+    if (result.canceled) return null
+
+    const uri = result.assets[0].uri
+    console.log('Gallery: got uri =', uri)
+
+    const compressed = await compressImage(uri)
+    console.log('Gallery: compressed =', compressed)
+    return compressed
+
+  } catch (err: any) {
+    console.log('Gallery ERROR:', err.message)
+    setError(err.message ?? 'Gallery failed')
+    return null
+  } finally {
+    setIsLoading(false)
   }
+}
 
   return { pickFromCamera, pickFromGallery, isLoading, error };
 }
