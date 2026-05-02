@@ -45,6 +45,20 @@
         }
       ] 
     ],
+    "plugins": [
+  [
+    "expo-camera",
+    {
+      "cameraPermission": "Allow Smart OCR to scan documents"
+    }
+  ],
+  [
+    "expo-image-picker",
+    {
+      "photosPermission": "Allow Smart OCR to access your photos"
+    }
+  ]
+],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
