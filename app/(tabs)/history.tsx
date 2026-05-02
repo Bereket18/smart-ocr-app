@@ -1,19 +1,20 @@
-import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  RefreshControl,
-} from "react-native";
-import { router } from "expo-router";
-import { FontSize, Spacing, Radius } from "@/constants/typography";
-import { useScanStore } from "@/store/scanStore";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
 import { useFirebase } from "@/hooks/useFirebase";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { useTheme } from "@/hooks/useTheme";
+import { useScanStore } from "@/store/scanStore";
 import { Scan } from "@/types/index";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function HistoryScreen() {
   const Theme = useTheme();
@@ -21,6 +22,8 @@ export default function HistoryScreen() {
   const { fetchScans, removeScan, error } = useFirebase();
   const { isOnline } = useOfflineSync();
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -39,6 +42,16 @@ export default function HistoryScreen() {
     setActiveScan(scan);
     router.push("/results");
   }
+
+  const filteredScans = scans.filter((scan) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      scan.editedText.toLowerCase().includes(query) ||
+      scan.extractedText.toLowerCase().includes(query) ||
+      scan.language.toLowerCase().includes(query)
+    );
+  });
 
   function handleDelete(scan: Scan) {
     Alert.alert("Delete Scan", "Are you sure?", [
@@ -156,6 +169,82 @@ export default function HistoryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Theme.background }}>
+      {/* Top bar — always visible */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: Theme.border,
+        }}
+      >
+        <Text style={{ fontSize: FontSize.body, color: Theme.textSecondary }}>
+          {scans.length} scan{scans.length !== 1 ? "s" : ""}
+        </Text>
+        <TouchableOpacity
+          onPress={() => {
+            setShowSearch(!showSearch);
+            if (showSearch) setSearchQuery("");
+          }}
+        >
+          <Text style={{ fontSize: 20 }}>{showSearch ? "✕" : "🔍"}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Input — only when open */}
+      {showSearch && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: Theme.surface,
+            margin: Spacing.md,
+            borderRadius: Radius.input,
+            paddingHorizontal: Spacing.md,
+            borderWidth: 1,
+            borderColor: Theme.border,
+          }}
+        >
+          {/* <Text style={{ fontSize: 16, marginRight: Spacing.sm }}>🔍</Text> */}
+          <TextInput
+            style={{
+              flex: 1,
+              paddingVertical: Spacing.md,
+              fontSize: FontSize.body,
+              color: Theme.textPrimary,
+            }}
+            placeholder="Search scans..."
+            placeholderTextColor={Theme.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Text style={{ color: Theme.textSecondary, fontSize: 16 }}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Search Results Count */}
+      {showSearch && searchQuery.trim().length > 0 && (
+        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm }}>
+          <Text
+            style={{ fontSize: FontSize.caption, color: Theme.textSecondary }}
+          >
+            {filteredScans.length} result{filteredScans.length !== 1 ? "s" : ""}{" "}
+            for &quot;{searchQuery}&quot;
+          </Text>
+        </View>
+      )}
+
+      {/* Offline Banner */}
       {!isOnline && (
         <View
           style={{
@@ -175,6 +264,8 @@ export default function HistoryScreen() {
           </Text>
         </View>
       )}
+
+      {/* Error Banner */}
       {error && (
         <View
           style={{
@@ -190,8 +281,9 @@ export default function HistoryScreen() {
           </Text>
         </View>
       )}
+
       <FlatList
-        data={scans}
+        data={filteredScans}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListEmptyComponent={renderEmpty}
