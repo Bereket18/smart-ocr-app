@@ -7,12 +7,13 @@ import { useAI } from "@/hooks/useAI";
 import { useExport } from "@/hooks/useExport";
 import { useFirebase } from "@/hooks/useFirebase";
 import { useOCR } from "@/hooks/useOCR";
+import { useTheme } from "@/hooks/useTheme";
+import { LANGUAGES, useTranslation } from "@/hooks/useTranslation";
 import { useScanStore } from "@/store/scanStore";
 import { Scan } from "@/types/index";
 import { generateId } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { useTranslation, LANGUAGES } from "@/hooks/useTranslation";
 import {
   ActivityIndicator,
   Alert,
@@ -24,7 +25,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTheme } from "@/hooks/useTheme";
 
 export default function ResultsScreen() {
   const { imageUri } = useLocalSearchParams<{ imageUri?: string }>();
@@ -117,36 +117,85 @@ export default function ResultsScreen() {
   function renderContent() {
     if (status === "processing") {
       return (
-        <View style={styles.centered}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: Spacing.xl4,
+          }}
+        >
           <ActivityIndicator size="large" color={Theme.accent} />
-          <Text style={styles.processingText}>Extracting text...</Text>
+          <Text
+            style={{
+              marginTop: Spacing.lg,
+              fontSize: FontSize.body,
+              color: Theme.textSecondary,
+            }}
+          >
+            Extracting text...
+          </Text>
         </View>
       );
     }
 
     if (status === "error") {
       return (
-        <View style={styles.centered}>
-          <Text style={styles.errorIcon}>⚠️</Text>
-          <Text style={styles.errorTitle}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: Spacing.xl4,
+          }}
+        >
+          <Text style={{ fontSize: 48, marginBottom: Spacing.lg }}>⚠️</Text>
+          <Text
+            style={{
+              fontSize: FontSize.h2,
+              fontWeight: "bold",
+              color: Theme.textPrimary,
+              marginBottom: Spacing.sm,
+            }}
+          >
             {error === "NO_TEXT_DETECTED"
               ? "No text found"
               : error === "NO_INTERNET_CONNECTION"
                 ? "No internet connection"
                 : "Something went wrong"}
           </Text>
-          <Text style={styles.errorSubtitle}>
+          <Text
+            style={{
+              fontSize: FontSize.body,
+              color: Theme.textSecondary,
+              textAlign: "center",
+              marginBottom: Spacing.xl,
+            }}
+          >
             {error === "NO_TEXT_DETECTED"
               ? "Try a clearer photo with better lighting"
               : error === "NO_INTERNET_CONNECTION"
-                ? "Connect to the internet to scan. Offline mode coming soon."
+                ? "Connect to the internet to scan."
                 : "Please try again"}
           </Text>
           <TouchableOpacity
-            style={styles.retryButton}
+            style={{
+              backgroundColor: Theme.accent,
+              borderRadius: Radius.button,
+              paddingHorizontal: Spacing.xl2,
+              paddingVertical: Spacing.md,
+            }}
             onPress={() => router.back()}
           >
-            <Text style={styles.retryText}>Try Again</Text>
+            <Text
+              style={{
+                color: Theme.background,
+                fontSize: FontSize.body,
+                fontWeight: "bold",
+              }}
+            >
+              Try Again
+            </Text>
           </TouchableOpacity>
         </View>
       );
@@ -167,17 +216,40 @@ export default function ResultsScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1, backgroundColor: Theme.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={90}
     >
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.md,
+          borderBottomWidth: 1,
+          borderBottomColor: Theme.border,
+        }}
+      >
         {/* Left — Language Badge */}
-        <View style={styles.headerLeft}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
           {(language || activeScan?.language) && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
+            <View
+              style={{
+                backgroundColor: Theme.accent,
+                borderRadius: Radius.badge,
+                paddingHorizontal: Spacing.sm,
+                paddingVertical: 2,
+              }}
+            >
+              <Text
+                style={{
+                  color: Theme.background,
+                  fontSize: FontSize.badge,
+                  fontWeight: "bold",
+                }}
+              >
                 {(language || activeScan?.language || "und").toUpperCase()}
               </Text>
             </View>
@@ -186,17 +258,45 @@ export default function ResultsScreen() {
 
         {/* Right — Action Buttons */}
         {hasContent && (
-          <View style={styles.headerRight}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: Spacing.sm,
+            }}
+          >
             <TouchableOpacity
-              style={styles.aiButton}
+              style={{
+                backgroundColor: "#2D1B4E",
+                borderRadius: Radius.button,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: Spacing.sm,
+                borderWidth: 1,
+                borderColor: Theme.aiPurple,
+              }}
               onPress={() => summarize(getCurrentText())}
               disabled={aiLoading}
             >
-              <Text style={styles.aiButtonText}>✨ AI</Text>
+              <Text
+                style={{
+                  color: Theme.aiPurple,
+                  fontSize: FontSize.body,
+                  fontWeight: "600",
+                }}
+              >
+                ✨ AI
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.iconButton}
+              style={{
+                backgroundColor: Theme.surface,
+                borderRadius: Radius.button,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: Spacing.sm,
+                borderWidth: 1,
+                borderColor: Theme.border,
+              }}
               onPress={() => setShowLanguages(true)}
               disabled={translateLoading}
             >
@@ -206,7 +306,14 @@ export default function ResultsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.iconButton}
+              style={{
+                backgroundColor: Theme.surface,
+                borderRadius: Radius.button,
+                paddingHorizontal: Spacing.md,
+                paddingVertical: Spacing.sm,
+                borderWidth: 1,
+                borderColor: Theme.border,
+              }}
               onPress={() => setShowExport(true)}
               disabled={isExporting}
             >
@@ -217,7 +324,12 @@ export default function ResultsScreen() {
 
             <TouchableOpacity
               style={[
-                styles.saveButton,
+                {
+                  backgroundColor: Theme.accent,
+                  borderRadius: Radius.button,
+                  paddingHorizontal: Spacing.lg,
+                  paddingVertical: Spacing.sm,
+                },
                 isUploading && styles.saveButtonDisabled,
               ]}
               onPress={handleSave}
@@ -235,8 +347,8 @@ export default function ResultsScreen() {
 
       {/* ── Content ── */}
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: Spacing.lg, flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
         <AISummaryCard
@@ -247,21 +359,63 @@ export default function ResultsScreen() {
         />
 
         {(translation || translateLoading || translateError) && (
-          <View style={styles.translationCard}>
-            <View style={styles.translationHeader}>
-              <Text style={styles.translationTitle}>🌐 Translation</Text>
+          <View
+            style={{
+              backgroundColor: Theme.surface,
+              borderRadius: Radius.card,
+              padding: Spacing.lg,
+              marginBottom: Spacing.md,
+              borderWidth: 1,
+              borderColor: Theme.accent,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: Spacing.md,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: FontSize.h2,
+                  fontWeight: "bold",
+                  color: Theme.accent,
+                }}
+              >
+                🌐 Translation
+              </Text>
               <TouchableOpacity onPress={clearTranslation}>
-                <Text style={styles.dismissText}>✕</Text>
+                <Text
+                  style={{
+                    color: Theme.textSecondary,
+                    fontSize: 16,
+                    fontWeight: "bold",
+                  }}
+                >
+                  ✕
+                </Text>
               </TouchableOpacity>
             </View>
             {translateLoading && (
               <ActivityIndicator color={Theme.accent} size="small" />
             )}
             {translateError && (
-              <Text style={styles.translateError}>⚠️ {translateError}</Text>
+              <Text style={{ fontSize: FontSize.body, color: Theme.error }}>
+                ⚠️ {translateError}
+              </Text>
             )}
             {translation && (
-              <Text style={styles.translationText}>{translation}</Text>
+              <Text
+                style={{
+                  fontSize: FontSize.body,
+                  color: Theme.textPrimary,
+                  lineHeight: 24,
+                }}
+              >
+                {translation}
+              </Text>
             )}
           </View>
         )}

@@ -1,16 +1,16 @@
+import { Theme } from "@/constants/colors";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
+import { useTheme } from "@/hooks/useTheme";
+import { countWords } from "@/utils/formatters";
+import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import {
-  View,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  View,
 } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import { Theme } from "@/constants/colors";
-import { FontSize, Spacing, Radius } from "@/constants/typography";
-import { countWords } from "@/utils/formatters";
-
 interface Props {
   initialText: string;
   onTextChange?: (text: string) => void;
@@ -47,6 +47,7 @@ function reduce(
 }
 
 export function TextEditor({ initialText, onTextChange }: Props) {
+  const Theme = useTheme();
   const [current, setCurrent] = useState(initialText);
   const [history, setHistory] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -65,37 +66,104 @@ export function TextEditor({ initialText, onTextChange }: Props) {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.toolbar}>
+    <View style={{ flex: 1 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: Theme.surface,
+          paddingHorizontal: Spacing.md,
+          paddingVertical: Spacing.sm,
+          borderRadius: Radius.card,
+          marginBottom: Spacing.sm,
+          gap: Spacing.sm,
+        }}
+      >
         <TouchableOpacity
-          style={[
-            styles.toolButton,
-            history.length === 0 && styles.toolButtonDisabled,
-          ]}
+          style={{
+            paddingHorizontal: Spacing.sm,
+            paddingVertical: Spacing.xs,
+            borderRadius: Radius.input,
+            backgroundColor: Theme.background,
+            opacity: history.length === 0 ? 0.4 : 1,
+          }}
           onPress={() => dispatch({ type: "UNDO" })}
           disabled={history.length === 0}
         >
-          <Text style={styles.toolText}>↩ Undo</Text>
+          <Text
+            style={{
+              fontSize: FontSize.caption,
+              color: Theme.textSecondary,
+              fontWeight: "600",
+            }}
+          >
+            ↩ Undo
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.toolButton}
+          style={{
+            paddingHorizontal: Spacing.sm,
+            paddingVertical: Spacing.xs,
+            borderRadius: Radius.input,
+            backgroundColor: Theme.background,
+          }}
           onPress={() => dispatch({ type: "RESET" })}
         >
-          <Text style={[styles.toolText, styles.toolTextWarning]}>↺ Reset</Text>
+          <Text
+            style={{
+              fontSize: FontSize.caption,
+              color: Theme.warning,
+              fontWeight: "600",
+            }}
+          >
+            ↺ Reset
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.toolButton} onPress={handleCopy}>
-          <Text style={[styles.toolText, styles.toolTextAccent]}>
+        <TouchableOpacity
+          style={{
+            paddingHorizontal: Spacing.sm,
+            paddingVertical: Spacing.xs,
+            borderRadius: Radius.input,
+            backgroundColor: Theme.background,
+          }}
+          onPress={handleCopy}
+        >
+          <Text
+            style={{
+              fontSize: FontSize.caption,
+              color: Theme.accent,
+              fontWeight: "600",
+            }}
+          >
             {copied ? "✓ Copied" : "⎘ Copy"}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.wordCount}>{countWords(current)} words</Text>
+        <Text
+          style={{
+            fontSize: FontSize.caption,
+            color: Theme.textSecondary,
+            marginLeft: "auto",
+          }}
+        >
+          {countWords(current)} words
+        </Text>
       </View>
 
       <TextInput
-        style={styles.input}
+        style={{
+          flex: 1,
+          backgroundColor: Theme.surface,
+          borderRadius: Radius.card,
+          padding: Spacing.lg,
+          fontSize: FontSize.bodyLarge,
+          color: Theme.textPrimary,
+          minHeight: 300,
+          borderWidth: 1,
+          borderColor: Theme.border,
+        }}
         value={current}
         onChangeText={(text) => dispatch({ type: "SET", payload: text })}
         multiline
