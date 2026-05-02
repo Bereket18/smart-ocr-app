@@ -208,7 +208,7 @@ export default function HistoryScreen() {
             borderColor: Theme.border,
           }}
         >
-          {/* <Text style={{ fontSize: 16, marginRight: Spacing.sm }}>🔍</Text> */}
+          <Text style={{ fontSize: 16, marginRight: Spacing.sm }}>🔍</Text>
           <TextInput
             style={{
               flex: 1,
