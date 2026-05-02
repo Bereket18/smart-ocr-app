@@ -1,30 +1,44 @@
 {
   "expo": {
-    "name": "smart-ocr-app",
+    "name": "smart OCRr",
     "slug": "smart-ocr-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "android": {
+    "adaptiveIcon": {
+    "foregroundImage": "./assets/images/adaptive-icon.png",
+    "backgroundColor": "#0F172A"
+  }
     "scheme": "smartocrapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
+    "ios": {
+      "jsEngine": "jsc"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.smartocrapp",
+      "bundleIdentifier": "com.smartocr.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.smartocrapp"
+      "package": "com.smartocr.app"
     },
     "web": {
       "output": "static",
@@ -43,22 +57,22 @@
             "backgroundColor": "#000000"
           }
         }
-      ] 
+      ]
     ],
     "plugins": [
-  [
-    "expo-camera",
-    {
-      "cameraPermission": "Allow Smart OCR to scan documents"
-    }
-  ],
-  [
-    "expo-image-picker",
-    {
-      "photosPermission": "Allow Smart OCR to access your photos"
-    }
-  ]
-],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Smart OCR to scan documents"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Smart OCR to access your photos"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
