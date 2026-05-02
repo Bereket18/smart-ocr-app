@@ -1,18 +1,11 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-} from "react-native";
-import { router } from "expo-router";
-import { FontSize, Spacing, Radius } from "@/constants/typography";
-import { useScanStore } from "@/store/scanStore";
-import { logoutUser, auth } from "@/services/firebase.service";
+import { ThemeType } from "@/constants/colors";
+import { FontSize, Radius, Spacing } from "@/constants/typography";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { useTheme } from "@/hooks/useTheme";
-import { ThemeType } from "@/constants/colors";
+import { auth, logoutUser } from "@/services/firebase.service";
+import { useScanStore } from "@/store/scanStore";
+import { router } from "expo-router";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 function SectionHeader({ title, Theme }: { title: string; Theme: ThemeType }) {
   return (
@@ -254,6 +247,64 @@ export default function SettingsScreen() {
         danger
         Theme={Theme}
       />
+
+      <SectionHeader title="COMING SOON" Theme={Theme} />
+      <View
+        style={{
+          backgroundColor: Theme.surface,
+          borderRadius: Radius.card,
+          padding: Spacing.lg,
+          borderWidth: 1,
+          borderColor: Theme.border,
+          gap: Spacing.sm,
+        }}
+      >
+        {[
+          { icon: "📱", label: "Multi-page document scanning" },
+          { icon: "🔌", label: "Offline OCR via ML Kit" },
+          { icon: "📁", label: "Folders and tags" },
+          { icon: "🔍", label: "Keyword search across all text" },
+          { icon: "✍️", label: "Handwriting recognition" },
+          { icon: "📊", label: "Table and form extraction" },
+          { icon: "☁️", label: "Google Drive / Dropbox export" },
+          { icon: "🌙", label: "Animated transitions and haptics" },
+          { icon: "🏪", label: "App Store / Play Store release" },
+        ].map((feature) => (
+          <View
+            key={feature.label}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: Spacing.md,
+              paddingVertical: Spacing.xs,
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>{feature.icon}</Text>
+            <Text
+              style={{
+                fontSize: FontSize.body,
+                color: Theme.textSecondary,
+                flex: 1,
+              }}
+            >
+              {feature.label}
+            </Text>
+            <Text
+              style={{
+                fontSize: FontSize.badge,
+                color: Theme.accent,
+                fontWeight: "bold",
+                backgroundColor: Theme.background,
+                paddingHorizontal: Spacing.sm,
+                paddingVertical: 2,
+                borderRadius: Radius.badge,
+              }}
+            >
+              SOON
+            </Text>
+          </View>
+        ))}
+      </View>
 
       <Text
         style={{
