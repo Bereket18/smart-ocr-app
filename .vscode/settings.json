@@ -19,5 +19,6 @@
       "database": "hrms",
       "username": "root"
     }
-  ]
+  ],
+  "al.showHomeAtStartup": "WhenUpdated"
 }
