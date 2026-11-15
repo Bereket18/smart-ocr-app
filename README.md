@@ -1,4 +1,5 @@
 # Welcome to your Expo app 👋
+# starting again soon
 
 # 📄 Smart OCR — AI-Powered Mobile Scanner
 
